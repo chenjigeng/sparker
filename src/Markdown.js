@@ -11,6 +11,7 @@ import { Image } from './Component/Image'
 import { MarkHotkey } from './utils'
 import { MarkdownPlugins } from './featurePlugins';
 import './markdown.css'
+import { socket } from './Socket';
 
 const plugins = [
   MarkdownPlugins(),
@@ -78,35 +79,42 @@ function CodeBlockLine(props) {
   )
 }
 
-const initialValue = Value.fromJSON({
-  document: {
-    nodes: [
-      {
-        object: 'block',
-        type: 'paragraph',
-        nodes: [
-          {
-            object: 'text',
-            leaves: [
-              {
-                text: 'A line of text in a paragraph.'
-              }
-            ]
-          }
-        ]
-      }
-    ]
-  }
-})
+const initialValue = Value.fromJSON({});
 
-class App extends React.Component {
+class SparkerEditor extends React.Component {
 
   state = {
     value: initialValue,
   }
 
-  onChange = ({ value }) => {
+  componentDidMount() {
+    socket.emit('hi')
+    socket.on('updateFromOthers', (data) => {
+      console.log(data.ops);
+      setTimeout(() => {
+        this.applyOperations(data.ops);        
+      }, 100);
+      console.log('hhh')
+    })
+    socket.on('init', (data) => {
+      console.log(data);
+      this.setState({
+        value: Value.fromJSON(data.value),
+      })
+    })
+  }
+
+  onChange = (change) => {
+    const { value } = change;
     console.log(value);
+    const ops = change.operations
+      .filter(o => o.type != 'set_selection' && o.type != 'set_value')
+      .toJS()
+    if (ops.length) {
+      socket.emit('update', {
+        ops,
+      });
+    }
     this.setState({ value })
   }
 
@@ -129,11 +137,18 @@ class App extends React.Component {
     }
   }
 
+  applyOperations = (operations) => {
+    const { value } = this.state
+    const change = value.change().applyOperations(operations)
+    this.setState({
+      value: change.value,
+    });
+  }
+
   render() {
     return (
       <Editor
         className='markdown-body'
-        onKeyDown={this.onKeyDown}
         value={this.state.value}
         onChange={this.onChange}
         plugins={plugins}
@@ -177,4 +192,4 @@ class App extends React.Component {
   }
 }
 
-export default App;
+export default SparkerEditor;

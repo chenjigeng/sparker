@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "express": "^4.16.2",
     "immutable": "^3.8.2",
     "prismjs": "^1.9.0",
     "react": "^16.2.0",
@@ -14,7 +15,8 @@
     "slate-edit-code": "^0.13.2",
     "slate-paste-linkify": "^0.5.0",
     "slate-prism": "^0.4.0",
-    "slate-react": "^0.11.1"
+    "slate-react": "^0.11.1",
+    "socket.io": "^2.0.4"
   },
   "scripts": {
     "start": "react-scripts start",
