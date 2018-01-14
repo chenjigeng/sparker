@@ -12,7 +12,11 @@ function onEnter (event, change) {
   const { value } = change;
   
   if (value.startBlock.type === 'check-list-item') {
-    change.splitBlock().setBlock({ data: { checked: false }});
+    if (event.shiftKey) {
+      change.splitBlock().setBlock('paragraph');
+    } else {
+      change.splitBlock().setBlock({ data: { checked: false }});
+    }
     return true;
   }
 }
