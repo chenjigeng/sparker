@@ -7,13 +7,14 @@ import PluginEditCode from 'slate-edit-code'
 import PluginPrism from 'slate-prism'
 
 import React from 'react'
-import { Image } from './Component/Image'
+import { Image, CheckListItem } from './Component'
 import { MarkHotkey } from './utils'
-import { MarkdownPlugins } from './featurePlugins';
+import { MarkdownPlugins, CheckListPlugins } from './featurePlugins';
 import './markdown.css'
 import { socket } from './Socket';
 
 const plugins = [
+  CheckListPlugins,
   MarkdownPlugins(),
   PasteLinkify({ type: 'link' }),
   InsertImages({
@@ -87,21 +88,30 @@ class SparkerEditor extends React.Component {
     value: initialValue,
   }
 
+  constructor () {
+    super();
+    this.operationQuequ = [];
+  }
+
   componentDidMount() {
-    socket.emit('hi')
+    setInterval(this.clearQueue, 200);
+    this.initSocketEvent();
+  }
+
+  initSocketEvent = () => {
     socket.on('updateFromOthers', (data) => {
-      console.log(data.ops);
-      setTimeout(() => {
-        this.applyOperations(data.ops);        
-      }, 100);
-      console.log('hhh')
+      this.operationQuequ = this.operationQuequ.concat(data.ops);
     })
     socket.on('init', (data) => {
-      console.log(data);
       this.setState({
         value: Value.fromJSON(data.value),
       })
     })
+  }
+
+  clearQueue = () => {
+    this.applyOperations(this.operationQuequ);
+    this.operationQuequ = [];
   }
 
   onChange = (change) => {
@@ -116,25 +126,6 @@ class SparkerEditor extends React.Component {
       });
     }
     this.setState({ value })
-  }
-
-  onKeyDown = (event, change) => {
-    if (!event.metaKey) return;
-    // Return with no changes if it's not the "`" key with ctrl pressed.
-    switch (event.key) {
-      case 'b': {
-        event.preventDefault();
-        change.toggleMark('bold');
-        return true;
-      }
-      case '`': {
-        event.preventDefault();    
-        const isCode = change.value.blocks.some(block => block.type === 'code')
-        change.setBlock(isCode ? 'paragraph' : 'code')
-        return true;
-      }
-      default: return;
-    }
   }
 
   applyOperations = (operations) => {
@@ -174,8 +165,9 @@ class SparkerEditor extends React.Component {
       case 'heading-five': return <h5 {...attributes}>{children}</h5>;
       case 'unorder-list': return <li {...attributes}>{children}</li>;
       case 'order-list': return <li {...attributes}>{children}</li>;      
-      case 'code': return <CodeBlock {...props} />
-      case 'code_line': return <CodeBlockLine {...props} />
+      case 'code': return <CodeBlock {...props} />;
+      case 'code_line': return <CodeBlockLine {...props} />;
+      case 'check-list-item': return <CheckListItem {...props} />;
       default: return
     }
   }

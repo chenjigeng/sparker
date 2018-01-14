@@ -6,4 +6,13 @@ body {
 
 .markdown-body {
   margin-top: 40px;
+  background: white;
+  margin: 20px auto;
+  padding: 20px;
+  width: 80%;
+}
+
+.check-list-item.checked {
+  opacity: 0.6666;
+  text-decoration: line-through;
 }

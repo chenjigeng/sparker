@@ -1,1 +1,2 @@
-export * from './markdown'
+export * from './checklist';
+export * from './markdown';

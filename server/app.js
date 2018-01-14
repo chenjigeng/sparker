@@ -32,18 +32,11 @@ let value = Value.fromJSON({
 });
 
 io.on('connection', function (socket) {
-  console.log(value);
+  console.log('connect');
   socket.emit('init', { value: value })
 
   socket.on('update', (data) => {
-    console.log('update');
-    // value = data.value;
-  })
-  socket.on('hi', function (data) {
-    console.log(data);
-  })
-  socket.on('update', (data) => {
-    console.log('ops', data);
+    value = value.change().applyOperations(data.ops).value;
     socket.broadcast.emit('updateFromOthers', data );
   })
 })
