@@ -4,6 +4,7 @@ export const CheckListPlugins = {
       case 'Backspace': return onBackspace(event, change);
       case 'Enter': return onEnter(event, change);
       case 'y': return onCheckList(event, change);
+      default: return;
     } 
   }
 }
@@ -12,8 +13,8 @@ function onEnter (event, change) {
   const { value } = change;
   
   if (value.startBlock.type === 'check-list-item') {
-    if (event.shiftKey) {
-      change.splitBlock().setBlock('paragraph');
+    if (event.shiftKey || value.startBlock.isEmpty) {
+      change.setBlock('paragraph');
     } else {
       change.splitBlock().setBlock({ data: { checked: false }});
     }

@@ -1,8 +1,6 @@
 export function MarkdownPlugins (options) {
   return {
     onKeyDown (event, change) {
-      console.log(event.key)
-      console.log(event.metaKey)
       switch (event.key) {
         case ' ': return onSpace(event, change);
         case 'Backspace': return onBackspace(event, change);
@@ -59,19 +57,15 @@ function onBackspace (event, change) {
 
 function onEnter (event, change) {
   const { value } = change
-  console.log(event.metaKey);
-  console.log(event.key);
   if (value.isExpanded) return
 
   const { startBlock, startOffset, endOffset } = value
   if (startOffset === 0 && startBlock.text.length === 0) return onBackspace(event, change)
   if (endOffset !== startBlock.text.length) return
-  console.log(startBlock.type)
   
   if (startBlock.type === 'code' && !event.metaKey) {
     change.delete();
     change.insertText('\n');
-    console.log('123123');
     return true;
   }
 

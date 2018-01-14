@@ -194,15 +194,19 @@ input:focus {
   margin: 0 -20px;
   border-bottom: 2px solid #eee;
   margin-bottom: 20px;
+  padding-bottom: 30px;
 }
 
 .toolbar-menu .search {
   position: relative;
+  top: -6px;
+  float: right;
 }
 
 .toolbar-menu .search-icon {
   position: absolute;
-  top: 0.5em;
+  top: 50%;
+  transform: translateY(-50%);
   left: 0.5em;
   color: #ccc;
 }

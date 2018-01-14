@@ -5,6 +5,7 @@ import PasteLinkify from 'slate-paste-linkify'
 import InsertImages from 'slate-drop-or-paste-images'
 import PluginEditCode from 'slate-edit-code'
 import PluginPrism from 'slate-prism'
+import * as Icons from './Icons';
 
 import React from 'react'
 import { Image, CheckListItem } from './Component'
@@ -30,16 +31,16 @@ const plugins = [
   MarkHotkey({ key: 'i', type: 'italic' }),
   MarkHotkey({ key: 's', type: 'strikethrough' }),
   MarkHotkey({ key: 'u', type: 'underline' }),
-  PluginPrism({
-    onlyIn: node => node.type === 'code',
-    getSyntax: node => {
-      const syntax = node.data.get('syntax');
-      return syntax;
-    }
-  }),
-  PluginEditCode({
-    onlyIn: node => node.type === 'code'
-  }),
+  // PluginPrism({
+  //   onlyIn: node => node.type === 'code',
+  //   getSyntax: node => {
+  //     const syntax = node.data.get('syntax');
+  //     return syntax;
+  //   }
+  // }),
+  // PluginEditCode({
+  //   onlyIn: node => node.type === 'code'
+  // }),
 ]
 
 // function CodeNode(props) {
@@ -47,7 +48,6 @@ const plugins = [
 // }
 
 function CodeBlock(props) {
-  console.log('123');
   const { editor, node } = props
   const language = node.data.get('language')
 
@@ -110,17 +110,18 @@ class SparkerEditor extends React.Component {
   }
 
   clearQueue = () => {
-    this.applyOperations(this.operationQuequ);
-    this.operationQuequ = [];
+    if (this.operationQuequ.length) {
+      this.applyOperations(this.operationQuequ);
+      this.operationQuequ = [];
+    }
   }
 
-  onChange = (change) => {
+  onChange = (change, needEmit = true) => {
     const { value } = change;
-    console.log(value);
     const ops = change.operations
       .filter(o => o.type != 'set_selection' && o.type != 'set_value')
       .toJS()
-    if (ops.length) {
+    if (ops.length && needEmit) {
       socket.emit('update', {
         ops,
       });
@@ -136,17 +137,133 @@ class SparkerEditor extends React.Component {
     });
   }
 
+  onInputChange = (event) => {
+    const { value } = this.state
+    const string = event.target.value
+    const texts = value.document.getTexts()
+    const decorations = []
+
+    texts.forEach((node) => {
+      const { key, text } = node
+      const parts = text.split(string)
+      let offset = 0
+
+      parts.forEach((part, i) => {
+        if (i != 0) {
+          decorations.push({
+            anchorKey: key,
+            anchorOffset: offset - string.length,
+            focusKey: key,
+            focusOffset: offset,
+            marks: [{ type: 'highlight' }],
+          })
+        }
+
+        offset = offset + part.length + string.length
+      })
+    })
+
+    // setting the `save` option to false prevents this change from being added
+    // to the undo/redo stack and clearing the redo stack if the user has undone
+    // changes.
+
+    const change = value.change()
+      .setOperationFlag('save', false)
+      .setValue({ decorations })
+      .setOperationFlag('save', true)
+    this.onChange(change, false)
+  }
+
+  renderToolbar = () => {
+    return (
+      <div className="menu toolbar-menu">
+        { this.renderButtons() }
+        <div className="search">
+          <Icons.MdSearchIcon className='search-icon'/>
+          <input
+            className="search-box"
+            type="search"
+            placeholder="Search the text..."
+            onChange={this.onInputChange}
+          />
+        </div>
+      </div>
+    )
+  }
+
+  renderButtons = () => {
+    const list = [
+      this.renderButton('bold', Icons.MdBoldIcon),
+      this.renderButton('italic', Icons.MdItalicIcon),
+      this.renderButton('strikethrough', Icons.MdStrikethroughIcon),
+      this.renderButton('underline', Icons.MdUnderlineIcon),
+      this.renderButton('order-list', Icons.GoListOrderIcon),
+      this.renderButton('unorder-list', Icons.GoListUnorderIcon),
+      this.renderButton('check-list-item', Icons.MdCheckBoxIcon),
+    ];
+    return list;
+  }
+
+  renderButton = (type, Icon, isMark) => {
+    const isActive = this.hasMark(type) || this.hasBlock(type);
+    const onMouseDown = (event) => {
+      if (isMark) {
+        this.onClickMark(event, type)        
+      } else {
+        this.onClickBlock(event, type);
+      }
+    }
+
+    return (
+      <span key={type} className="button" onMouseDown={onMouseDown} data-active={isActive}>
+        <Icon />
+      </span>
+    )
+  }
+
+  hasBlock = (type) => {
+    const { value } = this.state;
+    return value.blocks.some(block => block.type === type);
+  }
+
+  hasMark = (type) => {
+    const { value } = this.state
+    return value.activeMarks.some(mark => mark.type == type)
+  }
+
+  onClickMark = (event, type) => {
+    event.preventDefault()
+    const { value } = this.state
+    const change = value.change().toggleMark(type)
+    this.onChange(change)
+  }
+
+  onClickBlock = (event, type) => {
+    event.preventDefault();
+    const { value } = this.state;
+    let change;
+    if (value.startBlock.type === type) {
+      change = value.change().setBlock('paragrahp');      
+    } else {
+      change = value.change().setBlock(type);      
+    }
+    this.onChange(change);
+  }
+
   render() {
     return (
-      <Editor
-        className='markdown-body'
-        value={this.state.value}
-        onChange={this.onChange}
-        plugins={plugins}
-        renderNode={this.renderNode}
-        renderMark={this.renderMark}
-        decorateNode={this.decorateNode}
-      />
+      <div className="editor">
+        { this.renderToolbar() }
+        <Editor
+          className='markdown-body'
+          value={this.state.value}
+          onChange={this.onChange}
+          plugins={plugins}
+          renderNode={this.renderNode}
+          renderMark={this.renderMark}
+          decorateNode={this.decorateNode}
+        />
+      </div>
     )
   }
 
@@ -173,12 +290,14 @@ class SparkerEditor extends React.Component {
   }
 
   renderMark = (props) => {
-    switch (props.mark.type) {
+    const { children, mark } = props;
+    switch (mark.type) {
       // case 'code': return <code>{props.children}</code>;       
       case 'bold': return <strong>{props.children}</strong>;
       case 'italic': return <em>{props.children}</em>;
       case 'strikethrough': return <del>{props.children}</del>;
       case 'underline': return <u>{props.children}</u>;
+      case 'highlight': return <span className="highlight">{children}</span>
       default: return;
     }
   }
