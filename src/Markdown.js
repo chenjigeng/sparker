@@ -242,10 +242,18 @@ class SparkerEditor extends React.Component {
     event.preventDefault();
     const { value } = this.state;
     let change;
-    if (value.startBlock.type === type) {
-      change = value.change().setBlock('paragrahp');      
-    } else {
-      change = value.change().setBlock(type);      
+    if (type === 'order-list') {
+      if (value.startBlock.type === type) {
+        change = value.change().setBlock('paragrahp').unwrapBlock('numbered-list');              
+      } else {
+        change = value.change().setBlock(type).wrapBlock('numbered-list');
+      }
+    } else if (type === 'unorder-list') {
+      if (value.startBlock.type === type) {
+        change = value.change().setBlock('paragrahp').unwrapBlock('bulleted-list');         
+      } else {
+        change = value.change().setBlock(type).wrapBlock('bulleted-list');
+      }
     }
     this.onChange(change);
   }
