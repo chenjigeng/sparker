@@ -14,6 +14,13 @@ export class Image extends React.Component {
   }
 
   load = (file) => {
+    if (file.type === 'Buffer') {
+      this.setState({
+        url: file.data,
+        loaded: true,
+      });
+      return;
+    }
     const fileReader = new FileReader();
     fileReader.onload = (e) => {
       this.setState({

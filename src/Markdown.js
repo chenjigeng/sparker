@@ -254,6 +254,12 @@ class SparkerEditor extends React.Component {
       } else {
         change = value.change().setBlock(type).wrapBlock('bulleted-list');
       }
+    } else if (type === 'check-list-item') {
+      if (value.startBlock.type === type) {
+        change = value.change().setBlock('paragrahp');
+      } else {
+        change = value.change().setBlock(type);
+      }
     }
     this.onChange(change);
   }
@@ -262,15 +268,17 @@ class SparkerEditor extends React.Component {
     return (
       <div className="editor">
         { this.renderToolbar() }
-        <Editor
-          className='markdown-body'
-          value={this.state.value}
-          onChange={this.onChange}
-          plugins={plugins}
-          renderNode={this.renderNode}
-          renderMark={this.renderMark}
-          decorateNode={this.decorateNode}
-        />
+        <div className="editor-container">
+          <Editor
+            className='markdown-body'
+            value={this.state.value}
+            onChange={this.onChange}
+            plugins={plugins}
+            renderNode={this.renderNode}
+            renderMark={this.renderMark}
+            decorateNode={this.decorateNode}
+          />
+        </div>
       </div>
     )
   }

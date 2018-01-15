@@ -1,22 +1,28 @@
 body {
   margin: 0;
   padding: 0;
-  font-family: sans-serif;
+  font-family: -apple-system,BlinkMacSystemFont,PingFang SC,Helvetica,Tahoma,Arial,"Hiragino Sans GB","Microsoft YaHei","微软雅黑",SimSun,"宋体",Heiti,"黑体",sans-serif;
 }
 
 .editor {
-  margin-top: 40px;
-  background: white;
-  margin: 20px auto;
-  padding: 20px;
-  width: 80%;
+  /* margin-top: 40px; */
+  padding-top: 20px;
+  box-sizing: border-box;
 }
 
 .highlight {
   background: #ffeeba;
 }
 
-.toolbar-menu {
-  padding-bottom: 30px;
+.editor-container {
+  overflow: scroll;
+  height: calc(100% - 48px);
 }
 
+.markdown-body {
+  width: 80%;
+  box-sizing: border-box;
+  margin: auto;
+  background: white;
+  padding: 90px 100px 20px 100px;
+}

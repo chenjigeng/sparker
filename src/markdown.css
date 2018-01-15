@@ -7,6 +7,10 @@ textarea {
   background: #eee;
 }
 
+html, body, #root, .App, .editor {
+  height: 100%;
+}
+
 body {
   margin: 0;
 }
@@ -72,7 +76,7 @@ input {
 
 input:focus {
   outline: 0;
-  border-color: blue;
+  border-color: #ccc;
 }
 
 /**
@@ -190,17 +194,22 @@ input:focus {
 
 .toolbar-menu {
   position: relative;
-  padding: 1px 18px 17px;
-  margin: 0 -20px;
   border-bottom: 2px solid #eee;
-  margin-bottom: 20px;
-  padding-bottom: 30px;
+  width: 80%;
+  background: white;
+  margin: auto;
+  padding: 0 20px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  height: 48px;
+  
 }
 
 .toolbar-menu .search {
-  position: relative;
-  top: -6px;
-  float: right;
+  position: absolute;
+  right: 20px;
+  margin-top: 0;
 }
 
 .toolbar-menu .search-icon {
@@ -214,6 +223,14 @@ input:focus {
 .toolbar-menu .search-box {
   padding-left: 2em;
   width: 100%;
+}
+
+.toolbar-menu .search-box:active {
+  border-color: #ccc;
+}
+
+.toolbar-menu span {
+  margin-top: 0;
 }
 
 .hover-menu {
