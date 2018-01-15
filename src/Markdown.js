@@ -193,10 +193,10 @@ class SparkerEditor extends React.Component {
 
   renderButtons = () => {
     const list = [
-      this.renderButton('bold', Icons.MdBoldIcon),
-      this.renderButton('italic', Icons.MdItalicIcon),
-      this.renderButton('strikethrough', Icons.MdStrikethroughIcon),
-      this.renderButton('underline', Icons.MdUnderlineIcon),
+      this.renderButton('bold', Icons.MdBoldIcon, true),
+      this.renderButton('italic', Icons.MdItalicIcon, true),
+      this.renderButton('strikethrough', Icons.MdStrikethroughIcon, true),
+      this.renderButton('underline', Icons.MdUnderlineIcon, true),
       this.renderButton('order-list', Icons.GoListOrderIcon),
       this.renderButton('unorder-list', Icons.GoListUnorderIcon),
       this.renderButton('check-list-item', Icons.MdCheckBoxIcon),
@@ -241,18 +241,29 @@ class SparkerEditor extends React.Component {
   onClickBlock = (event, type) => {
     event.preventDefault();
     const { value } = this.state;
+    const parentType = value.document.getParent(value.startBlock.key) && value.document.getParent(value.startBlock.key).type;    
     let change;
     if (type === 'order-list') {
       if (value.startBlock.type === type) {
-        change = value.change().setBlock('paragrahp').unwrapBlock('numbered-list');              
+        change = value.change().setBlock('paragrahp');             
       } else {
-        change = value.change().setBlock(type).wrapBlock('numbered-list');
+        // 该元素不在有序列表里        
+        if (!parentType || parentType !== 'numbered-list') {
+          change = value.change().wrapBlock('numbered-list').setBlock(type);          
+        } else {
+          change = value.change().setBlock(type);          
+        }
       }
     } else if (type === 'unorder-list') {
       if (value.startBlock.type === type) {
-        change = value.change().setBlock('paragrahp').unwrapBlock('bulleted-list');         
+        change = value.change().setBlock('paragrahp');     
       } else {
-        change = value.change().setBlock(type).wrapBlock('bulleted-list');
+        // 该元素不在无序列表里
+        if (!parentType || parentType !== 'bulleted-list') {
+          change = value.change().wrapBlock('bulleted-list').setBlock(type);
+        } else {
+          change = value.change().setBlock(type);
+        } 
       }
     } else if (type === 'check-list-item') {
       if (value.startBlock.type === type) {
