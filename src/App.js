@@ -1,9 +1,5 @@
 import React, { Component } from 'react';
-// import './App.css';
-import SparkerEditor from './SparkerEditor';
-
-
-// const sparkSocket = io('localho?st:3001/hi');
+import { SparkerEditor } from './Component/SparkerEditor';
 
 class App extends Component {
   render() {

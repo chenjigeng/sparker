@@ -1,18 +1,17 @@
 import { Editor } from 'slate-react'
-import { CodeBlock, CodeBlockLine } from './Component/CodeBlock'
+import { CodeBlock, CodeBlockLine } from '../CodeBlock'
 import { Value } from 'slate'
 import PasteLinkify from 'slate-paste-linkify'
 import InsertImages from 'slate-drop-or-paste-images'
 // import PluginEditCode from 'slate-edit-code'
 // import PluginPrism from 'slate-prism'
 import React from 'react';
-import { Image, CheckListItem } from './Component';
-import { MarkHotkey } from './utils';
-import { MarkdownPlugins, CheckListPlugins } from './featurePlugins';
-import { socket } from './Socket';
-import { Toolbar } from './Component/Toolbar';
+import { Image, CheckListItem } from '..';
+import { MarkHotkey } from '../../utils';
+import { MarkdownPlugins, CheckListPlugins } from '../../featurePlugins';
+import { socket } from '../../Socket';
+import { Toolbar } from '../Toolbar';
 import './markdown.css';
-
 
 const plugins = [
   CheckListPlugins,
@@ -31,23 +30,7 @@ const plugins = [
   MarkHotkey({ key: 'i', type: 'italic' }),
   MarkHotkey({ key: 's', type: 'strikethrough' }),
   MarkHotkey({ key: 'u', type: 'underline' }),
-  // PluginPrism({
-  //   onlyIn: node => node.type === 'code',
-  //   getSyntax: node => {
-  //     const syntax = node.data.get('syntax');
-  //     return syntax;
-  //   }
-  // }),
-  // PluginEditCode({
-  //   onlyIn: node => node.type === 'code'
-  // }),
 ]
-
-// function CodeNode(props) {
-//   return <CodeBlock {...props} />
-// }
-
-
 
 const initialValue = Value.fromJSON({});
 
@@ -161,4 +144,4 @@ class SparkerEditor extends React.Component {
   }
 }
 
-export default SparkerEditor;
+export { SparkerEditor };
