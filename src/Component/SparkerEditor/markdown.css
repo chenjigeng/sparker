@@ -292,3 +292,15 @@ input:focus {
   background-color: #EBEBEB;
   display: inline-block;
 }
+
+ol, ul {
+  margin: 0;
+}
+
+li:first-child {
+  margin-top: 16px;
+}
+
+li:last-child {
+  margin-bottom: 16px;
+}
