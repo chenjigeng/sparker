@@ -195,10 +195,11 @@ input:focus {
 .toolbar-menu {
   position: relative;
   border-bottom: 2px solid #eee;
-  width: 80%;
-  background: white;
+  width: 100%;
+  box-shadow: 0 2px 4px hsla(0,0%,8%,.15);
+  /* background: white; */
   margin: auto;
-  padding: 0 20px;
+  padding: 0 calc(10% + 20px);
   box-sizing: border-box;
   display: flex;
   align-items: center;
@@ -208,7 +209,7 @@ input:focus {
 
 .toolbar-menu .search {
   position: absolute;
-  right: 20px;
+  right: calc(10% + 20px);
   margin-top: 0;
 }
 
