@@ -1,8 +1,8 @@
-import { Editor } from 'slate-react'
-import { CodeBlock, CodeBlockLine } from '../CodeBlock'
-import { Value } from 'slate'
-import PasteLinkify from 'slate-paste-linkify'
-import InsertImages from 'slate-drop-or-paste-images'
+import { Editor } from 'slate-react';
+import { CodeBlock, CodeBlockLine } from '../CodeBlock';
+import { Value } from 'slate';
+import PasteLinkify from 'slate-paste-linkify';
+import InsertImages from 'slate-drop-or-paste-images';
 // import PluginEditCode from 'slate-edit-code'
 // import PluginPrism from 'slate-prism'
 import React from 'react';
@@ -23,14 +23,14 @@ const plugins = [
         type: 'image',
         isVoid: true,
         data: { file }
-      })
+      });
     }
   }),
   MarkHotkey({ key: 'b', type: 'bold' }),
   MarkHotkey({ key: 'i', type: 'italic' }),
   MarkHotkey({ key: 's', type: 'strikethrough' }),
   MarkHotkey({ key: 'u', type: 'underline' }),
-]
+];
 
 const initialValue = Value.fromJSON({});
 
@@ -53,12 +53,12 @@ class SparkerEditor extends React.Component {
   initSocketEvent = () => {
     socket.on('updateFromOthers', (data) => {
       this.operationQuequ = this.operationQuequ.concat(data.ops);
-    })
+    });
     socket.on('init', (data) => {
       this.setState({
         value: Value.fromJSON(data.value),
-      })
-    })
+      });
+    });
   }
 
   clearQueue = () => {
@@ -72,18 +72,18 @@ class SparkerEditor extends React.Component {
     const { value } = change;
     const ops = change.operations
       .filter(o => o.type !== 'set_selection' && o.type !== 'set_value')
-      .toJS()
+      .toJS();
     if (ops.length && needEmit) {
       socket.emit('update', {
         ops,
       });
     }
-    this.setState({ value })
+    this.setState({ value });
   }
 
   applyOperations = (operations) => {
-    const { value } = this.state
-    const change = value.change().applyOperations(operations)
+    const { value } = this.state;
+    const change = value.change().applyOperations(operations);
     this.setState({
       value: change.value,
     });
@@ -105,17 +105,17 @@ class SparkerEditor extends React.Component {
           />
         </div>
       </div>
-    )
+    );
   }
 
   renderNode = (props) => {
-    const { attributes, children, node } = props
+    const { attributes, children, node } = props;
     switch (node.type) {
       case 'image': return <Image {...props}/>;
       case 'link': return <a href={node.data.get('href')} target='_blank'>{props.children}</a>;
       case 'block-quote': return <blockquote {...attributes}>{children}</blockquote>
       case 'bulleted-list': return <ul {...attributes}>{children}</ul>;
-      case 'numbered-list': return <ol {...attributes}>{children}</ol>
+      case 'numbered-list': return <ol {...attributes}>{children}</ol>;
       case 'heading-one': return <h1 {...attributes}>{children}</h1>;
       case 'heading-two': return <h2 {...attributes}>{children}</h2>;
       case 'heading-three': return <h3 {...attributes}>{children}</h3>;
@@ -126,7 +126,7 @@ class SparkerEditor extends React.Component {
       case 'code': return <CodeBlock {...props} />;
       case 'code_line': return <CodeBlockLine {...props} />;
       case 'check-list-item': return <CheckListItem {...props} />;
-      default: return
+      default: return;
     }
   }
 
@@ -138,7 +138,7 @@ class SparkerEditor extends React.Component {
       case 'italic': return <em>{props.children}</em>;
       case 'strikethrough': return <del>{props.children}</del>;
       case 'underline': return <u>{props.children}</u>;
-      case 'highlight': return <span className="highlight">{children}</span>
+      case 'highlight': return <span className="highlight">{children}</span>;
       default: return;
     }
   }

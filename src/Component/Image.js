@@ -26,13 +26,13 @@ export class Image extends React.Component {
       this.setState({
         url: e.target.result,
         loaded: true,
-      })
+      });
     };
     fileReader.readAsDataURL(file);
   }
 
   render () {
     const { loaded, url } = this.state;
-    return loaded ? <img src={url} alt='preview'/> : <span>Loading</span>
+    return loaded ? <img src={url} alt='preview'/> : <span>Loading</span>;
   }
 }

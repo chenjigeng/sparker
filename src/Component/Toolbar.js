@@ -4,6 +4,8 @@ import * as Icons from '../Icons';
 import {
   findDOMNode
 } from 'slate-react';
+import * as Component from '../SparkComponent';
+
 
 export class Toolbar extends React.Component {
 
@@ -12,15 +14,15 @@ export class Toolbar extends React.Component {
   }
 
   onInputChange = (event) => {
-    const { value } = this.props
-    const string = event.target.value
-    const texts = value.document.getTexts()
-    const decorations = []
+    const { value } = this.props;
+    const string = event.target.value;
+    const texts = value.document.getTexts();
+    const decorations = [];
 
     texts.forEach((node) => {
-      const { key, text } = node
-      const parts = text.split(string)
-      let offset = 0
+      const { key, text } = node;
+      const parts = text.split(string);
+      let offset = 0;
 
       parts.forEach((part, i) => {
         if (i !== 0) {
@@ -30,35 +32,38 @@ export class Toolbar extends React.Component {
             focusKey: key,
             focusOffset: offset,
             marks: [{ type: 'highlight' }],
-          })
+          });
         }
 
-        offset = offset + part.length + string.length
-      })
-    })
+        offset = offset + part.length + string.length;
+      });
+    });
 
     const change = value.change()
       .setOperationFlag('save', false)
       .setValue({ decorations })
-      .setOperationFlag('save', true)
-    this.props.onChange(change, false)
+      .setOperationFlag('save', true);
+    this.props.onChange(change, false);
   }
 
   renderButton = (type, Icon, isMark) => {
+    console.log(Component);
     const isActive = this.hasMark(type) || this.hasBlock(type);
     const onMouseDown = (event) => {
       if (isMark) {
-        this.onClickMark(event, type)        
+        this.onClickMark(event, type);
       } else {
         this.onClickBlock(event, type);
       }
-    }
+    };
 
     return (
-      <span key={type} className="button" onMouseDown={onMouseDown} data-active={isActive}>
-        <Icon />
-      </span>
-    )
+      <Component.ToolTip content="测试">
+        <span key={type} className="button" onMouseDown={onMouseDown} data-active={isActive}>
+          <Icon />
+        </span>
+      </Component.ToolTip>
+    );
   }
 
   renderButtons = () => {
@@ -80,12 +85,12 @@ export class Toolbar extends React.Component {
   }
 
   hasMark = (type) => {
-    const { value } = this.props
-    return value.activeMarks.some(mark => mark.type === type)
+    const { value } = this.props;
+    return value.activeMarks.some(mark => mark.type === type);
   }
 
   onClickMark = (event, type) => {
-    event.preventDefault()
+    event.preventDefault();
     const { value } = this.props;
     const selection = value.selection;
     const { startKey, endKey, startOffset, endOffset } = selection;
@@ -98,9 +103,9 @@ export class Toolbar extends React.Component {
         focusOffset: value.startBlock.text.length
       }).toggleMark(type).deselect().select(selection);
     } else {
-      change = value.change().toggleMark(type)
+      change = value.change().toggleMark(type);
     }
-    this.props.onChange(change)
+    this.props.onChange(change);
   }
 
   onClickBlock = (event, type) => {
@@ -154,6 +159,6 @@ export class Toolbar extends React.Component {
           />
         </div>
       </div>
-    )
+    );
   }
 }

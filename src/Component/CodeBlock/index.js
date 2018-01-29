@@ -2,8 +2,8 @@ import React from 'react';
 
 function CodeBlock(props) {
 
-  const { editor, node } = props
-  const language = node.data.get('language')
+  const { editor, node } = props;
+  const language = node.data.get('language');
 
   function onChange(event) {
     editor.change(c => c.setNodeByKey(node.key, { data: { language: event.target.value }}))
@@ -25,16 +25,16 @@ function CodeBlock(props) {
         </select>
       </div>
     </div>
-  )
+  );
 }
 
 function CodeBlockLine(props) {
   return (
     <div {...props.attributes}>{props.children}</div>
-  )
+  );
 }
 
 export {
   CodeBlock,
   CodeBlockLine,
-}
+};
