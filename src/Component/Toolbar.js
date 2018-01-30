@@ -46,8 +46,7 @@ export class Toolbar extends React.Component {
     this.props.onChange(change, false);
   }
 
-  renderButton = (type, Icon, isMark) => {
-    console.log(Component);
+  renderButton = (type, Icon, tooltip, isMark) => {
     const isActive = this.hasMark(type) || this.hasBlock(type);
     const onMouseDown = (event) => {
       if (isMark) {
@@ -58,7 +57,9 @@ export class Toolbar extends React.Component {
     };
 
     return (
-      <Component.ToolTip content="测试">
+      <Component.ToolTip
+        content={tooltip}
+      >
         <span key={type} className="button" onMouseDown={onMouseDown} data-active={isActive}>
           <Icon />
         </span>
@@ -68,13 +69,48 @@ export class Toolbar extends React.Component {
 
   renderButtons = () => {
     const list = [
-      this.renderButton('bold', Icons.MdBoldIcon, true),
-      this.renderButton('italic', Icons.MdItalicIcon, true),
-      this.renderButton('strikethrough', Icons.MdStrikethroughIcon, true),
-      this.renderButton('underline', Icons.MdUnderlineIcon, true),
-      this.renderButton('order-list', Icons.GoListOrderIcon),
-      this.renderButton('unorder-list', Icons.GoListUnorderIcon),
-      this.renderButton('check-list-item', Icons.MdCheckBoxIcon),
+      this.renderButton('bold', Icons.MdBoldIcon, (
+        <div>
+          <div>粗体</div>
+          <div>⌘+B</div>
+        </div>
+      ), true),
+      this.renderButton('italic', Icons.MdItalicIcon, (
+        <div>
+          <div>斜体</div>
+          <div>⌘+I</div>
+        </div>
+      ), true),
+      this.renderButton('strikethrough', Icons.MdStrikethroughIcon, (
+        <div>
+          <div>下划线</div>
+          <div>⌘+S</div>
+        </div>
+      ) ,true),
+      this.renderButton('underline', Icons.MdUnderlineIcon, (
+        <div>
+          <div>下划线</div>
+          <div>⌘+U</div>
+        </div>
+      ), true),
+      this.renderButton('order-list', Icons.GoListOrderIcon, (
+        <div>
+          <div>有序列表</div>
+          <div>⌘+Shift+O</div>
+        </div>
+      )),
+      this.renderButton('unorder-list', Icons.GoListUnorderIcon, (
+        <div>
+          <div>无序列表</div>
+          <div>⌘+Shift+U</div>
+        </div>
+      )),
+      this.renderButton('check-list-item', Icons.MdCheckBoxIcon, (
+        <div>
+          <div>任务列表</div>
+          <div>⌘+Shift+C</div>
+        </div>
+      )),
     ];
     return list;
   }
@@ -113,34 +149,24 @@ export class Toolbar extends React.Component {
     const { value } = this.props;
     const parentType = value.document.getParent(value.startBlock.key) && value.document.getParent(value.startBlock.key).type;    
     let change;
-    if (type === 'order-list') {
-      if (value.startBlock.type === type) {
-        change = value.change().setBlock('paragrahp');             
+    if (value.startBlock.type === type) {
+      change = value.change().setBlock('paragrahp');
+    } else if (type === 'order-list') {
+      // 该元素不在有序列表里        
+      if (!parentType || parentType !== 'numbered-list') {
+        change = value.change().wrapBlock('numbered-list').setBlock(type);          
       } else {
-        // 该元素不在有序列表里        
-        if (!parentType || parentType !== 'numbered-list') {
-          change = value.change().wrapBlock('numbered-list').setBlock(type);          
-        } else {
-          change = value.change().setBlock(type);          
-        }
+        change = value.change().setBlock(type);          
       }
     } else if (type === 'unorder-list') {
-      if (value.startBlock.type === type) {
-        change = value.change().setBlock('paragrahp');     
-      } else {
-        // 该元素不在无序列表里
-        if (!parentType || parentType !== 'bulleted-list') {
-          change = value.change().wrapBlock('bulleted-list').setBlock(type);
-        } else {
-          change = value.change().setBlock(type);
-        } 
-      }
-    } else if (type === 'check-list-item') {
-      if (value.startBlock.type === type) {
-        change = value.change().setBlock('paragrahp');
+      // 该元素不在无序列表里
+      if (!parentType || parentType !== 'bulleted-list') {
+        change = value.change().wrapBlock('bulleted-list').setBlock(type);
       } else {
         change = value.change().setBlock(type);
-      }
+      } 
+    } else if (type === 'check-list-item') {
+      change = value.change().setBlock(type);
     }
     this.props.onChange(change);
   }

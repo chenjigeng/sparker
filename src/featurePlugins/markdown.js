@@ -8,60 +8,60 @@ export function MarkdownPlugins (options) {
         default: return;
       }
     }
-  }
+  };
 }
 
 function onSpace (event, change) {
   const { value } = change;
   if (value.isExpanded) return;
-  const { startBlock, startOffset } = value
-  const chars = startBlock.text.slice(0, startOffset).replace(/\s*/g, '')
-  const type = getType(chars)
+  const { startBlock, startOffset } = value;
+  const chars = startBlock.text.slice(0, startOffset).replace(/\s*/g, '');
+  const type = getType(chars);
 
-  if (!type) return
-  if (type === 'unorder-list' && startBlock.type === 'unorder-list') return
+  if (!type) return;
+  if (type === 'unorder-list' && startBlock.type === 'unorder-list') return;
   if (type === 'order-list' && startBlock.type === 'order-list') return;
-  event.preventDefault()
+  event.preventDefault();
 
-  change.setBlock(type)
+  change.setBlock(type);
 
   if (type === 'unorder-list') {
-    change.wrapBlock('bulleted-list')
+    change.wrapBlock('bulleted-list');
   } else if (type === 'order-list') {
     change.wrapBlock('numbered-list');
   }
 
-  change.extendToStartOf(startBlock).delete()
-  return true
+  change.extendToStartOf(startBlock).delete();
+  return true;
 } 
 
 function onBackspace (event, change) {
-  const { value } = change
-  if (value.isExpanded) return
-  if (value.startOffset !== 0) return
+  const { value } = change;
+  if (value.isExpanded) return;
+  if (value.startOffset !== 0) return;
 
-  const { startBlock } = value
-  if (startBlock.type === 'paragraph') return
+  const { startBlock } = value;
+  if (startBlock.type === 'paragraph') return;
 
-  event.preventDefault()
-  change.setBlock('paragraph')
+  event.preventDefault();
+  change.setBlock('paragraph');
 
   if (startBlock.type === 'unorder-list') {
-    change.unwrapBlock('bulleted-list')
+    change.unwrapBlock('bulleted-list');
   } else if (startBlock.type === 'order-list') {
-    change.unwrapBlock('numbered-list')
+    change.unwrapBlock('numbered-list');
   }
 
-  return true
+  return true;
 }
 
 function onEnter (event, change) {
-  const { value } = change
-  if (value.isExpanded) return
+  const { value } = change;
+  if (value.isExpanded) return;
 
-  const { startBlock, startOffset, endOffset } = value
-  if (startOffset === 0 && startBlock.text.length === 0) return onBackspace(event, change)
-  if (endOffset !== startBlock.text.length) return
+  const { startBlock, startOffset, endOffset } = value;
+  if (startOffset === 0 && startBlock.text.length === 0) return onBackspace(event, change);
+  if (endOffset !== startBlock.text.length) return;
   
   if (startBlock.type === 'code' && !event.metaKey) {
     change.delete();
@@ -79,12 +79,12 @@ function onEnter (event, change) {
     startBlock.type !== 'block-quote' &&
     startBlock.type !== 'code'
   ) {
-    return
+    return;
   }
 
-  event.preventDefault()
-  change.splitBlock().setBlock('paragraph')
-  return true
+  event.preventDefault();
+  change.splitBlock().setBlock('paragraph');
+  return true;
 }
 
 function getType (type) {

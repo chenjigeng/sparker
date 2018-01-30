@@ -17,4 +17,4 @@ export {
   MdCheckBoxIcon,
   GoListOrderIcon,
   GoListUnorderIcon,
-}
+};

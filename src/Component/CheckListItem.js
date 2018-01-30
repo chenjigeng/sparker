@@ -15,9 +15,9 @@ export class CheckListItem extends React.Component {
    */
 
   onChange = (event) => {
-    const checked = event.target.checked
-    const { editor, node } = this.props
-    editor.change(c => c.setNodeByKey(node.key, { data: { checked }}))
+    const checked = event.target.checked;
+    const { editor, node } = this.props;
+    editor.change(c => c.setNodeByKey(node.key, { data: { checked }}));
   }
 
   /**
@@ -28,8 +28,8 @@ export class CheckListItem extends React.Component {
    */
 
   render() {
-    const { attributes, children, node } = this.props
-    const checked = node.data.get('checked')
+    const { attributes, children, node } = this.props;
+    const checked = node.data.get('checked');
     return (
       <div
         className={`check-list-item ${checked ? 'checked' : ''}`}
@@ -47,7 +47,7 @@ export class CheckListItem extends React.Component {
           {children}
         </span>
       </div>
-    )
+    );
   }
 
 }

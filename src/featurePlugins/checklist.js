@@ -7,7 +7,7 @@ export const CheckListPlugins = {
       default: return;
     } 
   }
-}
+};
 
 function onEnter (event, change) {
   const { value } = change;

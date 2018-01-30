@@ -7,13 +7,16 @@ import InsertImages from 'slate-drop-or-paste-images';
 // import PluginPrism from 'slate-prism'
 import React from 'react';
 import { Image, CheckListItem } from '..';
-import { MarkHotkey } from '../../utils';
+import { MarkHotkey, BlockHotkey } from '../../utils';
 import { MarkdownPlugins, CheckListPlugins } from '../../featurePlugins';
 import { socket } from '../../Socket';
 import { Toolbar } from '../Toolbar';
-import './markdown.css';
+import './markdown.less';
 
 const plugins = [
+  BlockHotkey({ key: 'o', type: 'order-list'}),
+  BlockHotkey({ key: 'u', type: 'unorder-list'}),
+  BlockHotkey({ key: 'c', type: 'check-list-item'}),  
   CheckListPlugins,
   MarkdownPlugins(),
   PasteLinkify({ type: 'link' }),
@@ -113,7 +116,7 @@ class SparkerEditor extends React.Component {
     switch (node.type) {
       case 'image': return <Image {...props}/>;
       case 'link': return <a href={node.data.get('href')} target='_blank'>{props.children}</a>;
-      case 'block-quote': return <blockquote {...attributes}>{children}</blockquote>
+      case 'block-quote': return <blockquote {...attributes}>{children}</blockquote>;
       case 'bulleted-list': return <ul {...attributes}>{children}</ul>;
       case 'numbered-list': return <ol {...attributes}>{children}</ol>;
       case 'heading-one': return <h1 {...attributes}>{children}</h1>;

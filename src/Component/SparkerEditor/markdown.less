@@ -171,10 +171,6 @@ input:focus {
   margin-bottom: 0;
 }
 
-.editor > * > * + * {
-  margin-top: 1em;
-}
-
 .menu > * {
   display: inline-block;
 }
@@ -199,7 +195,7 @@ input:focus {
   box-shadow: 0 2px 4px hsla(0,0%,8%,.15);
   /* background: white; */
   margin: auto;
-  padding: 0 calc(10% + 20px);
+  padding: 0 calc(~"10% + 20px");
   box-sizing: border-box;
   display: flex;
   align-items: center;
@@ -209,7 +205,7 @@ input:focus {
 
 .toolbar-menu .search {
   position: absolute;
-  right: calc(10% + 20px);
+  right: calc(~"10% + 20px");
   margin-top: 0;
 }
 

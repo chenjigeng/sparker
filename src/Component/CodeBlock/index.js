@@ -6,7 +6,7 @@ function CodeBlock(props) {
   const language = node.data.get('language');
 
   function onChange(event) {
-    editor.change(c => c.setNodeByKey(node.key, { data: { language: event.target.value }}))
+    editor.change(c => c.setNodeByKey(node.key, { data: { language: event.target.value }}));
   }
 
   return (
