@@ -33,7 +33,6 @@ export class CheckListItem extends React.Component {
     return (
       <div
         className={`check-list-item ${checked ? 'checked' : ''}`}
-        contentEditable={false}
         {...attributes}
       >
         <span>
@@ -43,7 +42,7 @@ export class CheckListItem extends React.Component {
             onChange={this.onChange}
           />
         </span>
-        <span contentEditable suppressContentEditableWarning>
+        <span>
           {children}
         </span>
       </div>
