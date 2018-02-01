@@ -61,7 +61,7 @@ function onEnter (event, change) {
 
   const { startBlock, startOffset, endOffset } = value;
   if (startOffset === 0 && startBlock.text.length === 0) return onBackspace(event, change);
-  if (startBlock.type === 'code' && !event.metaKey) {
+  if (startBlock.type === 'code' && !event.shiftKey) {
     change.delete();
     change.insertText('\n');
     return true;

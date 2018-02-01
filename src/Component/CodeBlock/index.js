@@ -11,6 +11,10 @@ function CodeBlock(props) {
   const { editor, node } = props;
   const language = node.data.get('language');
 
+  if (!language) {
+    editor.change(c => c.setNodeByKey(node.key, { data: { language: 'css' }}));
+  }
+
   function onChange(event) {
     editor.change(c => c.setNodeByKey(node.key, { data: { language: event.target.value }}));
   }
@@ -18,7 +22,7 @@ function CodeBlock(props) {
   return (
     <div style={{ position: 'relative' }}>
       <pre>
-        <code syntax="javascript" {...props.attributes}>{props.children}</code>
+        <code {...props.attributes}>{props.children}</code>
       </pre>
       <div
         contentEditable={false}

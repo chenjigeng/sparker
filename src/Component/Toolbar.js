@@ -58,6 +58,7 @@ export class Toolbar extends React.Component {
 
     return (
       <Component.ToolTip
+        key={type}
         content={tooltip}
       >
         <span key={type} className="button" onMouseDown={onMouseDown} data-active={isActive}>
