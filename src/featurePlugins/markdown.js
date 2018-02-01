@@ -1,7 +1,9 @@
 export function MarkdownPlugins (options) {
   return {
     onKeyDown (event, change) {
+      console.log(event.key);
       switch (event.key) {
+        case 'Tab': return onTab(event, change);
         case ' ': return onSpace(event, change);
         case 'Backspace': return onBackspace(event, change);
         case 'Enter': return onEnter(event, change);
@@ -9,6 +11,19 @@ export function MarkdownPlugins (options) {
       }
     }
   };
+}
+
+function onTab (event, change) {
+  const { value } = change;
+  if (value.isExpanded) return;
+
+  const { startBlock, startOffset, endOffset } = value;
+  if (startBlock.type === 'code') {
+    event.preventDefault();
+    change.delete();
+    change.insertText('  ');
+    return true;
+  }
 }
 
 function onSpace (event, change) {
