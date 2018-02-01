@@ -4,7 +4,7 @@ import { Value } from 'slate';
 import PasteLinkify from 'slate-paste-linkify';
 import InsertImages from 'slate-drop-or-paste-images';
 // import PluginEditCode from 'slate-edit-code'
-// import PluginPrism from 'slate-prism'
+import PluginPrism from 'slate-prism';
 import React from 'react';
 import { Image, CheckListItem } from '..';
 import { MarkHotkey, BlockHotkey } from '../../utils';
@@ -14,6 +14,14 @@ import { Toolbar } from '../Toolbar';
 import './markdown.less';
 
 const plugins = [
+  PluginPrism({
+    onlyIn: node => {
+      return node.type === 'code';
+    },
+    getSyntax: node => {
+      return node.data.get('language');
+    }
+  }),
   BlockHotkey({ key: 'o', type: 'order-list'}),
   BlockHotkey({ key: 'u', type: 'unorder-list'}),
   BlockHotkey({ key: 'c', type: 'check-list-item'}),  

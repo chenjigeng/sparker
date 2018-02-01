@@ -61,13 +61,13 @@ function onEnter (event, change) {
 
   const { startBlock, startOffset, endOffset } = value;
   if (startOffset === 0 && startBlock.text.length === 0) return onBackspace(event, change);
-  if (endOffset !== startBlock.text.length) return;
-  
   if (startBlock.type === 'code' && !event.metaKey) {
     change.delete();
     change.insertText('\n');
     return true;
   }
+  if (endOffset !== startBlock.text.length) return;
+  
 
   if (
     startBlock.type !== 'heading-one' &&

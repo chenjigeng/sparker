@@ -1,7 +1,13 @@
 import React from 'react';
+import './prism.less';
+// import '../../vendor/highlight/highlight.pack';
+// import hljs from 'highlight.js';
+// import loader from 'monaco-editor/min/vs/loader';
 
 function CodeBlock(props) {
 
+  // console.log(hljs);
+  
   const { editor, node } = props;
   const language = node.data.get('language');
 
