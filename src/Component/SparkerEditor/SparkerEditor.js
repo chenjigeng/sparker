@@ -29,7 +29,14 @@ const plugins = [
   MarkdownPlugins(),
   PasteLinkify({ type: 'link' }),
   InsertImages({
-    insertImage,
+    insertImage: (transform, file) => {
+      
+      return transform.insertBlock({
+        type: 'image',
+        isVoid: true,
+        data: { file }
+      });
+    }
   }),
   MarkHotkey({ key: 'b', type: 'bold' }),
   MarkHotkey({ key: 'i', type: 'italic' }),
