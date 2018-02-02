@@ -6,7 +6,7 @@ import InsertImages from 'slate-drop-or-paste-images';
 // import PluginEditCode from 'slate-edit-code'
 import PluginPrism from 'slate-prism';
 import React from 'react';
-import { Image, CheckListItem } from '..';
+import { Image, CheckListItem, insertImage } from '..';
 import { MarkHotkey, BlockHotkey } from '../../utils';
 import { MarkdownPlugins, CheckListPlugins } from '../../featurePlugins';
 import { socket } from '../../Socket';
@@ -29,13 +29,7 @@ const plugins = [
   MarkdownPlugins(),
   PasteLinkify({ type: 'link' }),
   InsertImages({
-    insertImage: (transform, file) => {
-      return transform.insertBlock({
-        type: 'image',
-        isVoid: true,
-        data: { file }
-      });
-    }
+    insertImage,
   }),
   MarkHotkey({ key: 'b', type: 'bold' }),
   MarkHotkey({ key: 'i', type: 'italic' }),
@@ -74,6 +68,7 @@ class SparkerEditor extends React.Component {
 
   clearQueue = () => {
     if (this.operationQuequ.length) {
+      console.log(this.operationQuequ);
       this.applyOperations(this.operationQuequ);
       this.operationQuequ = [];
     }
@@ -84,6 +79,8 @@ class SparkerEditor extends React.Component {
     const ops = change.operations
       .filter(o => o.type !== 'set_selection' && o.type !== 'set_value')
       .toJS();
+    console.log('hhh');
+    console.log(ops);
     if (ops.length && needEmit) {
       socket.emit('update', {
         ops,

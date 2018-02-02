@@ -1,10 +1,14 @@
-var express = require('express');
-var app = express();
-var slate = require('slate');
+const express = require('express');
+const app = express();
+const slate = require('slate');
 const Value = slate.Value;
+const COS = require('cos-nodejs-sdk-v5');
+const router = require('./router/index');
 
-var server = require('http').createServer(app);
-var io = require('socket.io')(server);
+app.use('/', router);
+
+const server = require('http').createServer(app);
+const io = require('socket.io')(server);
 
 server.listen(3001, function() {
   console.log('connect');
@@ -33,10 +37,10 @@ let value = Value.fromJSON({
 
 io.on('connection', function (socket) {
   console.log('connect');
-  socket.emit('init', { value: value })
+  socket.emit('init', { value: value });
 
   socket.on('update', (data) => {
     value = value.change().applyOperations(data.ops).value;
     socket.broadcast.emit('updateFromOthers', data );
-  })
-})
+  });
+});

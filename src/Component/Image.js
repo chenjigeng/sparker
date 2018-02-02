@@ -1,4 +1,5 @@
 import React from 'react';
+import { cos } from '../helpers';
 
 export class Image extends React.Component {
 
@@ -8,27 +9,15 @@ export class Image extends React.Component {
   };
 
   componentDidMount () {
-    const node = this.props.node;
-    const file = node.data.get('file');
-    this.load(file);
-  }
-
-  load = (file) => {
-    if (file.type === 'Buffer') {
+    const { node, editor } = this.props;
+    const srcUrl = node.data.get('url');  
+    if (srcUrl) {
       this.setState({
-        url: file.data,
+        url: srcUrl,
         loaded: true,
       });
       return;
     }
-    const fileReader = new FileReader();
-    fileReader.onload = (e) => {
-      this.setState({
-        url: e.target.result,
-        loaded: true,
-      });
-    };
-    fileReader.readAsDataURL(file);
   }
 
   render () {
@@ -36,3 +25,24 @@ export class Image extends React.Component {
     return loaded ? <img src={url} alt='preview'/> : <span>Loading</span>;
   }
 }
+
+export function insertImage(transform, file) {
+  return new Promise((resolve, reject) => {
+    cos.sliceUploadFile({
+      Bucket: 'sparker-1252588471',
+      Region: 'ap-guangzhou',
+      Key: file.name + Date.now(),
+      Body: file,
+    }, (err, data) => {
+      if (!data) {
+        return;
+      }
+      const imageUrl = `//${data.Location}`;
+      resolve(transform.insertBlock({
+        type: 'image',
+        isVoid: true,
+        data: { url: imageUrl }
+      }));
+    });
+  });
+};
