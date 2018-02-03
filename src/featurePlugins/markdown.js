@@ -1,7 +1,6 @@
 export function MarkdownPlugins (options) {
   return {
     onKeyDown (event, change) {
-      console.log(event.key);
       switch (event.key) {
         case 'Tab': return onTab(event, change);
         case ' ': return onSpace(event, change);

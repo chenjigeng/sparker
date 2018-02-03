@@ -6,7 +6,7 @@ import InsertImages from 'slate-drop-or-paste-images';
 // import PluginEditCode from 'slate-edit-code'
 import PluginPrism from 'slate-prism';
 import React from 'react';
-import { Image, CheckListItem, insertImage } from '..';
+import { Image, CheckListItem, HoverMenu } from '..';
 import { MarkHotkey, BlockHotkey } from '../../utils';
 import { MarkdownPlugins, CheckListPlugins } from '../../featurePlugins';
 import { socket } from '../../Socket';
@@ -75,7 +75,6 @@ class SparkerEditor extends React.Component {
 
   clearQueue = () => {
     if (this.operationQuequ.length) {
-      console.log(this.operationQuequ);
       this.applyOperations(this.operationQuequ);
       this.operationQuequ = [];
     }
@@ -86,8 +85,6 @@ class SparkerEditor extends React.Component {
     const ops = change.operations
       .filter(o => o.type !== 'set_selection' && o.type !== 'set_value')
       .toJS();
-    console.log('hhh');
-    console.log(ops);
     if (ops.length && needEmit) {
       socket.emit('update', {
         ops,
@@ -108,6 +105,7 @@ class SparkerEditor extends React.Component {
     return (
       <div className="editor">
         <Toolbar onChange={this.onChange} value={this.state.value} />
+        <HoverMenu onChange={this.onChange} value={this.state.value} />
         <div className="editor-container">
           <Editor
             className='markdown-body'

@@ -94,7 +94,6 @@ var getAuth = function (opt) {
   // 签名算法说明文档：https://www.qcloud.com/document/product/436/7778
   // 步骤一：计算 SignKey
   var signKey = crypto.HmacSHA1(qKeyTime, SecretKey).toString();
-  console.log(signKey);
 
   // 步骤二：构成 FormatString
   var formatString = [method, pathname, obj2str(queryParams), obj2str(headers), ''].join('\n');
