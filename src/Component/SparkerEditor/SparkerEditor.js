@@ -63,10 +63,12 @@ class SparkerEditor extends React.Component {
   }
 
   initSocketEvent = () => {
+    console.log(1231);
     socket.on('updateFromOthers', (data) => {
       this.operationQuequ = this.operationQuequ.concat(data.ops);
     });
     socket.on('init', (data) => {
+      console.log('1231');
       this.setState({
         value: Value.fromJSON(data.value),
       });

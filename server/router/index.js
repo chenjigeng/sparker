@@ -1,9 +1,8 @@
-const express = require('express');
-const router = express.Router();
-const imageCtrl = require('../controller/image');
+const userRouter = require('./user');
 
-router.get('/image/auth', function (req, res, next) {
-  imageCtrl.auth(req, res);
-});
+function initRouter (app) {
+  app.use('/user', userRouter);
 
-module.exports = router;
+}
+
+module.exports = initRouter;
