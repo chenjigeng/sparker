@@ -3,16 +3,12 @@ const { resCodes } = require('../config');
 
 const userCtrl = {};
 
-
-
 userCtrl.regist = async function (req, res, next) {
-  console.log(req.body);
-  console.log('hhh');
   const { username, password } = req.body;
   try {
     const result = await userModel.create(username, password);
-    console.log(result);
-    console.log(result[0]);
+    req.session.login = true;
+    req.session.username = username;
     res.status(200).send({
       code: resCodes.OK,
       msg: '创建成功',
@@ -29,11 +25,11 @@ userCtrl.regist = async function (req, res, next) {
 };
 
 userCtrl.login = async function (req, res, next) {
-  console.log(req.body);
   const { username, password } = req.body;
-
   try {
     const result = await userModel.confirm(username, password);
+    req.session.login = true;
+    req.session.username = username;
     res.status(200).send({
       code: resCodes.OK,
       msg: '登录成功',
