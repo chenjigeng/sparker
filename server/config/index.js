@@ -1,3 +1,5 @@
+const resCodes = require('./responseCodes');
+
 const mysqlConfig = {
   host: 'localhost',
   user: 'chenjg',
@@ -7,4 +9,5 @@ const mysqlConfig = {
 
 module.exports = {
   mysqlConfig,
+  resCodes,
 };

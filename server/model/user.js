@@ -7,7 +7,7 @@ const userModel = {};
 
 
 
-userModel.create = function(username, password) {
+userModel.create = function (username, password) {
   return new Promise((resolve, reject) => {
     const cipher = crypto.createCipher('aes192', secret);
     let enc = cipher.update(password, 'utf8', 'hex');
@@ -25,6 +25,33 @@ userModel.create = function(username, password) {
       }
       resolve(result);
     });
+  });
+};
+
+userModel.confirm = (username, password) => {
+  return new Promise((resolve, reject) => {
+    connection.query('select password from user where username = ?', [username], (err, result, fidlds) => {
+      console.log(result);
+      if (!result.length) {
+        reject({
+          code: 'EMPTY'
+        });
+      }
+      const pass = result[0].password;
+      console.log(pass);
+      const decipher = crypto.createDecipher('aes192', secret);
+      let dec = decipher.update(pass, 'hex', 'utf8');//编码方式从hex转为utf-8;
+      dec += decipher.final('utf8');//编码方式从utf-8;
+      console.log(dec);
+      if (dec === password) {
+        resolve();
+      } else {
+        reject({
+          code: 'NO_EQUAL',
+        });
+      }
+    });
+    
   });
 };
 

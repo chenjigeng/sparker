@@ -8,8 +8,8 @@ const server = require('./socket')(app);
 require('./model');
 
 
+app.use(bodyParser.urlencoded({ extended: false }));
 initRouter(app);
-app.use(bodyParser.urlencoded({ extends: false }));
 
 server.listen(3001, function() {
   console.log('connect');
