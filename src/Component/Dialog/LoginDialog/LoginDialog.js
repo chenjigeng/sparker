@@ -1,14 +1,32 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Dialog, Input } from '../../../SparkComponent';
+import { Dialog, Input, Button } from '../../../SparkComponent';
 import './LoginDialog.less';
 
 export class LoginDialog extends React.Component {
+
+  state = {
+    username: '',
+    password: '',
+  };
 
   static propTypes = {
     visible: PropTypes.bool.isRequired,
     onCancel: PropTypes.func.isRequired,
   };
+
+  handleLogin = () => {
+    fetch('/user', {
+      method: 'POST',
+      body: JSON.stringify({
+        username: '',
+        password: ''
+      })
+    }).then(res => res.json())
+      .then((res) => {
+        console.log(res);
+      });
+  }
 
   render () {
     const { visible, onCancel } = this.props;
@@ -17,17 +35,24 @@ export class LoginDialog extends React.Component {
       <Dialog
         className="login-dialog"
         visible={visible}
-        title="登录"
+        title="Sparker文档"
         onCancel={onCancel}
         >
           <Dialog.Body>
             <div className="login-dialog-body">
-              <Input placeholder='账号' />
-              <Input placeholder="密码" type="password"/>
+              <Input 
+                placeholder='账号' 
+                onChange={(e) => this.setState({ username: e.target.value })
+              }/>
+              <Input 
+                placeholder="密码" 
+                type="password"
+                onChange={(e) => this.setState({ password: e.target.value })}
+              />
             </div>
           </Dialog.Body>
           <Dialog.Footer>
-            <div>测试Footer</div>
+            <Button type="primary" onClick={this.handleLogin}>登录</Button>
           </Dialog.Footer>
         </Dialog>
     );
