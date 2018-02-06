@@ -29,6 +29,7 @@ userModel.create = function (username, password) {
 };
 
 userModel.confirm = (username, password) => {
+  console.log(username, password);
   return new Promise((resolve, reject) => {
     connection.query('select password from user where username = ?', [username], (err, result, fidlds) => {
       console.log(result);
@@ -36,6 +37,7 @@ userModel.confirm = (username, password) => {
         reject({
           code: 'EMPTY'
         });
+        return;
       }
       const pass = result[0].password;
       console.log(pass);

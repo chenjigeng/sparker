@@ -16,16 +16,28 @@ export class LoginDialog extends React.Component {
   };
 
   handleLogin = () => {
-    fetch('/user', {
+    console.log('login');
+    const { username, password } = this.state;
+    const data = new FormData();
+    data.append('username', username);
+    data.append('password', password);
+    fetch('/login', {
       method: 'POST',
-      body: JSON.stringify({
-        username: '',
-        password: ''
-      })
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ username, password })
     }).then(res => res.json())
-      .then((res) => {
+      .then(res => {
+        if (res.code === 200) {
+          //登录成功
+        }
         console.log(res);
       });
+      // .then((res) => {
+      //   console.log(res);
+      // });
   }
 
   render () {
