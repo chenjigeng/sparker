@@ -1,13 +1,13 @@
 import { takeEvery } from 'redux-saga';
 import { put, all, call } from 'redux-saga/effects';
-import { sayDoc } from '../views/Doc/DocSaga';
-import { sayHome } from '../views/Home/HomeSaga';
+import { DocSaga } from '../views/Doc';
+import { HomeSaga } from '../views/Home';
 
 // 一个工具函数：返回一个 Promise，这个 Promise 将在 1 秒后 resolve
 export const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 export function* helloSaga() {
-  yield all([call(sayDoc), call(sayHome)]);
+  yield all([call(DocSaga), call(HomeSaga)]);
   console.log('hellosaga');
 }
 

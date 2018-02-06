@@ -1,12 +1,7 @@
-import React from 'react';
-import { SparkerEditor } from '../../Component/SparkerEditor';
+import { Doc } from './Doc';
+import { DocSaga } from './DocSaga';
 
-export default class Doc extends React.Component {
-  render () {
-    return (
-      <div className="App">
-        <SparkerEditor />
-      </div>
-    );
-  }
-}
+export {
+  Doc,
+  DocSaga,
+};

@@ -1,3 +1,3 @@
-export function* sayHome() {
+export function* HomeSaga() {
   console.log('hello Home');
 }

@@ -1,12 +1,7 @@
-import React from 'react';
-import { Navbar } from '../../Component';
+import { Home } from './Home';
+import { HomeSaga } from './HomeSaga';
 
-export default class Home extends React.Component {
-  render () {
-    return (
-      <div>
-        <Navbar />
-      </div>
-    );
-  }
-}
+export {
+  Home,
+  HomeSaga,
+};

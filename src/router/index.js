@@ -4,8 +4,8 @@ import {
   Route,
   Link
 } from 'react-router-dom';
-import Doc from '../views/Doc';
-import Home from '../views/Home';
+import { Doc } from '../views/Doc';
+import { Home } from '../views/Home';
 
 const Router = () => (
   <BrowserRouter>
