@@ -48,6 +48,8 @@
     "react-dom": "^16.2.0",
     "react-highlight": "^0.10.0",
     "react-icons": "^2.2.7",
+    "react-router": "^4.2.0",
+    "react-router-dom": "^4.2.2",
     "slate": "^0.32.1",
     "slate-drop-or-paste-images": "^0.8.0",
     "slate-edit-code": "^0.13.2",
