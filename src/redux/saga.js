@@ -7,7 +7,7 @@ import { HomeSaga } from '../views/Home';
 export const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 export function* helloSaga() {
-  yield all([call(DocSaga), call(HomeSaga)]);
+  yield all([call(DocSaga), call(HomeSaga), call(watchIncrementAsync)]);
   console.log('hellosaga');
 }
 

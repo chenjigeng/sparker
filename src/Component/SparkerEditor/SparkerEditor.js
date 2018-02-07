@@ -8,7 +8,7 @@ import PluginPrism from 'slate-prism';
 import React from 'react';
 import { Image, CheckListItem, HoverMenu } from '..';
 import { MarkHotkey, BlockHotkey } from '../../utils';
-import { MarkdownPlugins, CheckListPlugins } from '../../featurePlugins';
+import { MarkdownPlugins, CheckListPlugins } from './featurePlugins';
 import { socket } from '../../Socket';
 import { Toolbar } from '../Toolbar';
 import './markdown.less';
