@@ -1,24 +1,77 @@
-import { takeEvery } from 'redux-saga';
-import { put, all, call } from 'redux-saga/effects';
+import { put, all, call, takeEvery } from 'redux-saga/effects';
 import { DocSaga } from '../views/Doc';
 import { HomeSaga } from '../views/Home';
+import * as Apis from '../Apis';
+import * as actionTypes from './actionTypes';
+import { SparkLoading } from '../SparkComponent';
 
-// 一个工具函数：返回一个 Promise，这个 Promise 将在 1 秒后 resolve
-export const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
-
-export function* helloSaga() {
-  yield all([call(DocSaga), call(HomeSaga), call(watchIncrementAsync)]);
-  console.log('hellosaga');
+export function* mainSaga() {
+  yield takeEvery(actionTypes.LOGIN, loginSaga);
+  yield takeEvery(actionTypes.REGIST, registSaga);
+  yield all([call(DocSaga), call(HomeSaga)]);
+  console.log('mainsaga');
 }
 
-// Our worker Saga: 将异步执行 increment 任务
-export function* incrementAsync() {
-  yield delay(1000);
-  yield put({ type: 'INCREMENT' });
+export const actions = {
+  requestLogin: (username, password) => {
+    return {
+      type: actionTypes.LOGIN,
+      payload: { username, password }
+    };
+  },
+  requestRegist: (username, password) => {
+    return {
+      type: actionTypes.REGIST,
+      payload: { username, password }
+    };
+  }
+};
+
+function* loginSaga(action) {
+  try {
+    yield put({ type: actionTypes.LOGIN_REQUEST});
+    SparkLoading.show();
+    console.log(action);
+    const { payload: { username, password } } = action;
+    const result = yield Apis.Login(username, password).then(res => res.json());
+    console.log(result);
+    if (result.code === 200) {
+      yield put({ 
+        type: actionTypes.LOGIN_SUCCESS, 
+        payload: {
+          isLogin: true,
+          userInfo: {
+            username,
+          }
+        }
+      });
+    } else {
+      yield put({
+        type: actionTypes.LOGIN_FAILURE,
+        payload: {
+          isLogin: false
+        }
+      });
+    }
+    console.log(result);
+  } catch (err) {
+    console.log(err);
+    yield put({
+      type: actionTypes.LOGIN_FAILURE,
+      payload: {
+        isLogin: false
+      }
+    });
+  }
+  SparkLoading.hide();
 }
 
-// Our watcher Saga: 在每个 INCREMENT_ASYNC action 调用后，派生一个新的 incrementAsync 任务
-export function* watchIncrementAsync() {
-  console.log('123');
-  yield* takeEvery('INCREMENT_ASYNC', incrementAsync);
+function* registSaga(action) {
+  try {
+    const { payload: { username, password } } = action;
+    const result = yield Apis.Login(username, password);
+    console.log(result);
+  } catch (err) {
+    console.log(err);
+  }
 }

@@ -2,6 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { Dialog, Input, Button } from '../../../SparkComponent';
 import './LoginDialog.less';
+import { myFetch } from '../../../utils';
 
 export class LoginDialog extends React.Component {
 
@@ -12,35 +13,18 @@ export class LoginDialog extends React.Component {
 
   static propTypes = {
     visible: PropTypes.bool.isRequired,
+    isLoading: PropTypes.bool.isRequired,
     onCancel: PropTypes.func.isRequired,
+    login: PropTypes.func.isRequired,
   };
 
   handleLogin = () => {
-    console.log('login');
     const { username, password } = this.state;
-    const data = new FormData();
-    data.append('username', username);
-    data.append('password', password);
-    fetch('/login', {
-      method: 'POST',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ username, password })
-    }).then(res => res.json())
-      .then(res => {
-        if (res.code === 200) {
-          //登录成功
-        }
-        console.log(res);
-      });
-      // .then((res) => {
-      //   console.log(res);
-      // });
+    this.props.login(username, password);    
   }
 
   render () {
+    console.log(this.props);
     const { visible, onCancel } = this.props;
 
     return (
