@@ -14,7 +14,9 @@ const MessageManager = {
     return this.messageInstance;
   },
   show (type, content, duration, onClose) {
-    if (typeof duration === 'function') {
+    if (!duration) {
+      duration = 3;
+    } else if (typeof duration === 'function') {
       onClose = duration;
       duration = 3;
     }

@@ -3,7 +3,7 @@ import { DocSaga } from '../views/Doc';
 import { HomeSaga } from '../views/Home';
 import * as Apis from '../Apis';
 import * as actionTypes from './actionTypes';
-import { SparkLoading } from '../SparkComponent';
+import { SparkLoading, message } from '../SparkComponent';
 
 export function* mainSaga() {
   yield takeEvery(actionTypes.LOGIN, loginSaga);
@@ -45,6 +45,7 @@ function* loginSaga(action) {
           }
         }
       });
+      message.success('登录成功');
     } else {
       yield put({
         type: actionTypes.LOGIN_FAILURE,
@@ -52,6 +53,7 @@ function* loginSaga(action) {
           isLogin: false
         }
       });
+      message.success(result.msg);
     }
     console.log(result);
   } catch (err) {
@@ -62,6 +64,7 @@ function* loginSaga(action) {
         isLogin: false
       }
     });
+    message.success(err.msg || err.message || err);
   }
   SparkLoading.hide();
 }

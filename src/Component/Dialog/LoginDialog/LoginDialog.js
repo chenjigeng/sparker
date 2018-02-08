@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Dialog, Input, Button } from '../../../SparkComponent';
+import { Dialog, Input, Button, message } from '../../../SparkComponent';
 import './LoginDialog.less';
 import { myFetch } from '../../../utils';
 
