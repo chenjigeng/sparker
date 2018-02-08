@@ -24,7 +24,6 @@ export class LoginDialog extends React.Component {
   }
 
   render () {
-    console.log(this.props);
     const { visible, onCancel } = this.props;
 
     return (

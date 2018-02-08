@@ -18,6 +18,9 @@
       "react"
   ],
   "rules": {
+    "jsx-a11y/href-no-hash": "off",
+    "react/no-direct-mutation-state": "off",
+    "require-yield": "off",
     "indent": "off",
     "linebreak-style": [
         "error",

@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import * as Icons from '../Icons';
+import * as Icons from './Icons';
 
 export class HoverMenu extends React.Component {
   static propTypes = {
