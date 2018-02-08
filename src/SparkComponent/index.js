@@ -5,4 +5,5 @@ export * from './Loading';
 export * from './Message';
 export * from './Message';
 export * from './Nav';
+export * from './Tabs';
 export * from './ToolTip';

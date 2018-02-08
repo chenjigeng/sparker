@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Dialog, Input, Button, message } from '../../../SparkComponent';
+import { Dialog, Input, Button, message, Tabs } from '../../../SparkComponent';
 import './LoginDialog.less';
 import { myFetch } from '../../../utils';
 
@@ -34,6 +34,10 @@ export class LoginDialog extends React.Component {
         onCancel={onCancel}
         >
           <Dialog.Body>
+            <Tabs defaultActiveKey="122">
+              <Tabs.TabPane tab="asd" key="12">asdasd</Tabs.TabPane>
+              <Tabs.TabPane tab="asd" key="122">asdasd</Tabs.TabPane>              
+            </Tabs>
             <div className="login-dialog-body">
               <Input 
                 placeholder='账号' 
