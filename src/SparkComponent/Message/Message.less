@@ -1,0 +1,76 @@
+.spark-message {
+  position: fixed;
+  top: 16px;
+  width: 100%;
+  z-index: 1200;
+  pointer-events: none;
+  .spark-message-notify {
+    text-align: center;
+    padding: 8px;
+    font-family: "Monospaced Number", "Chinese Quote", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    color: rgba(0, 0, 0, 0.65);
+    .spark-message-notify-content {
+      display: inline-block;
+      padding: 10px 16px;
+      border-radius: 4px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      background: #fff;
+      display: inline-block;
+      pointer-events: all;
+
+      i {
+        font-family: spark-icon !important;
+        cursor: pointer;
+        speak: none;
+        font-style: normal;
+        font-weight: 400;
+        font-variant: normal;
+        text-transform: none;
+        line-height: 1;
+        vertical-align: baseline;
+        display: inline-block;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      i[type='success'] {
+        color: #52c41a;
+
+        &:before {
+          content: "\E609";
+        }
+      }
+
+      i[type='info'] {
+        color: #1890ff;
+
+        &:before {
+          content: "\E615";
+        }
+      }
+
+      i[type="error"] {
+        color: #f4364c;
+        
+        &:before {
+          content: "\E60A";
+        }
+      }
+      
+      i[type='warning'] {
+        color: #faad14;
+
+        &:before {
+          content: "\E623";
+        }
+      }
+    }
+    i {
+      margin-right: 8px;
+      font-size: 16px;
+      top: 1px;
+      position: relative;
+    }
+  }
+}
