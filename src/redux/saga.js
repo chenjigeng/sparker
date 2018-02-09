@@ -9,7 +9,6 @@ export function* mainSaga() {
   yield takeEvery(actionTypes.LOGIN, loginSaga);
   yield takeEvery(actionTypes.REGIST, registSaga);
   yield all([call(DocSaga), call(HomeSaga)]);
-  console.log('mainsaga');
 }
 
 export const actions = {
@@ -31,10 +30,8 @@ function* loginSaga(action) {
   try {
     yield put({ type: actionTypes.LOGIN_REQUEST});
     SparkLoading.show();
-    console.log(action);
     const { payload: { username, password } } = action;
     const result = yield Apis.Login(username, password).then(res => res.json());
-    console.log(result);
     if (result.code === 200) {
       yield put({ 
         type: actionTypes.LOGIN_SUCCESS, 
@@ -55,9 +52,7 @@ function* loginSaga(action) {
       });
       message.success(result.msg);
     }
-    console.log(result);
   } catch (err) {
-    console.log(err);
     yield put({
       type: actionTypes.LOGIN_FAILURE,
       payload: {
@@ -71,10 +66,38 @@ function* loginSaga(action) {
 
 function* registSaga(action) {
   try {
+    yield put({ type: actionTypes.REGIST_REQUEST});
+    SparkLoading.show();
     const { payload: { username, password } } = action;
-    const result = yield Apis.Login(username, password);
-    console.log(result);
+    const result = yield Apis.Login(username, password).then(res => res.json());
+    if (result.code === 200) {
+      yield put({ 
+        type: actionTypes.REGIST_SUCCESS, 
+        payload: {
+          isLogin: true,
+          userInfo: {
+            username,
+          }
+        }
+      });
+      message.success('注册成功');
+    } else {
+      yield put({
+        type: actionTypes.REGIST_FAILURE,
+        payload: {
+          isLogin: false
+        }
+      });
+      message.success(result.msg);
+    }
   } catch (err) {
-    console.log(err);
+    yield put({
+      type: actionTypes.REGIST_FAILURE,
+      payload: {
+        isLogin: false
+      }
+    });
+    message.success(err.msg || err.message || err);
   }
+  SparkLoading.hide();
 }

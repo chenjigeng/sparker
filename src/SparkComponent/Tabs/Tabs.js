@@ -7,7 +7,8 @@ import './Tabs.less';
 export class Tabs extends React.Component {
 
   static propTypes = {
-    defaultActiveKey: PropTypes.string,
+    activeKey: PropTypes.string,
+    onChange: PropTypes.func,
   }
   
   state = {
@@ -17,12 +18,20 @@ export class Tabs extends React.Component {
   constructor (props) {
     super(props);
     this.tabChildren = {};
-    this.state.activeKey = this.props.defaultActiveKey || this.props.children[1].key;
+    this.state.activeKey = this.props.activeKey || this.props.children[1].key;
   }
 
   componentDidUpdate(prevProps, prevState) {
     this.updateInkStyle();
     this.updateContentStyle();
+  }
+
+  componentWillReceiveProps(nextProps) {
+    if (nextProps.activeKey !== this.props.activeKey) {
+      this.setState({
+        activeKey: nextProps.activeKey
+      });
+    }
   }
 
   updateInkStyle = () => {
@@ -55,6 +64,9 @@ export class Tabs extends React.Component {
   }
 
   handleClickTabBar = (activeKey) => {
+    const { onChange } = this.props;
+
+    onChange && onChange(activeKey);
     this.setState({
       activeKey,
     });

@@ -1,13 +1,12 @@
 import React from 'react';
 import { Nav } from '../../SparkComponent';
-import { LoginDialog } from '../Dialog';
+import { LRDialog } from '../Dialog';
 import './Navbar.less';
 import { connect } from 'react-redux';
 import { actions } from '../../redux/saga';
 
 @connect(
   (state) => {
-    console.log(state);
     return state.commonInfo;
   },
   (dispatch) => {
@@ -20,13 +19,34 @@ import { actions } from '../../redux/saga';
 export class Navbar extends React.Component {
 
   state = {
-    loginVisible: false,
+    lrVisible: false,
     registVisible: false,
+    activeTabKey: 'login',
   };
+
+  closeLRDialog = () => {
+    this.setState({
+      lrVisible: !this.state.lrVisible,
+    });
+  }
 
   toggleLoginDialog = () => {
     this.setState({
-      loginVisible: !this.state.loginVisible
+      lrVisible: !this.state.lrVisible,
+      activeTabKey: 'login',
+    });
+  }
+
+  toggleRegistDialog = () => {
+    this.setState({
+      lrVisible: !this.state.lrVisible,
+      activeTabKey: 'regist',
+    });
+  }
+
+  changeActiveTabkey = (activeTabKey) => {
+    this.setState({
+      activeTabKey,
     });
   }
 
@@ -34,7 +54,7 @@ export class Navbar extends React.Component {
     return (
       <React.Fragment>
         <a href='#' onClick={this.toggleLoginDialog}>登录</a>
-        <a href='#'>注册</a>
+        <a href='#' onClick={this.toggleRegistDialog}>注册</a>
       </React.Fragment>
     );
   }
@@ -51,9 +71,8 @@ export class Navbar extends React.Component {
   }
 
   render () {
-    const { loginVisible, registVisible } = this.state;
-    const { login, isLogin, isLoading, userInfo } = this.props;
-    console.log('login', isLogin);
+    const { lrVisible, registVisible, activeTabKey } = this.state;
+    const { login, regist, isLogin, isLoading, userInfo } = this.props;
     return (
       <div>
         <Nav>
@@ -66,10 +85,13 @@ export class Navbar extends React.Component {
             }
           </Nav.content>
         </Nav>
-        <LoginDialog 
-          visible={loginVisible && !isLogin} 
-          onCancel={this.toggleLoginDialog} 
+        <LRDialog 
+          changeActiveTabkey={this.changeActiveTabkey}
+          activeTabKey={activeTabKey}
+          visible={lrVisible && !isLogin} 
+          onCancel={this.closeLRDialog} 
           login={login}
+          regist={regist}
           isLoading={isLoading}
         />
       </div>
