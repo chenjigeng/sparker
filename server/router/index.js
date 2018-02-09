@@ -2,8 +2,8 @@ const userRouter = require('./user');
 const commonRouter = require('./common');
 
 function initRouter (app) {
-  app.use('/', commonRouter);
-  app.use('/user', userRouter);
+  app.use('/api/', commonRouter);
+  app.use('/api/user', userRouter);
 }
 
 module.exports = initRouter;

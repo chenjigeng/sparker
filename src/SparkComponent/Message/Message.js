@@ -18,7 +18,6 @@ export class Message extends React.Component {
     const { messages } = this.state;
     const newMessage = message;
     newMessage.mid = genUid();
-    console.log('messages', messages);
     this.state.messages = messages.concat(newMessage);
     this.setState({
       messages: messages.concat(newMessage)
@@ -39,7 +38,6 @@ export class Message extends React.Component {
         this.remove(message.mid);
         message.onClose && message.onClose();
       };
-      console.log(message);
       return (
         <Notify
           key={message.mid}

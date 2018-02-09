@@ -16,7 +16,6 @@ export const SparkLoading =  {
     el.style.display = 'block';    
   },
   hide: function () {
-    console.log('hide');
     if (el) {
       el.style.display = 'none';
     }

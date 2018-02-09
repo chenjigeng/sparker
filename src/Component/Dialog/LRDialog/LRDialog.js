@@ -13,6 +13,7 @@ export class LRDialog extends React.Component {
     loginPassword: '',
     registUsername: '',
     registPassword: '',
+    confirmRegistPassword: '',
   };
 
   static propTypes = {
@@ -26,11 +27,15 @@ export class LRDialog extends React.Component {
   };
 
   handleLoginOrRegist = () => {
-    const { loginUsername, loginPassword, registPassword, registUsername } = this.state;
+    const { loginUsername, loginPassword, registPassword, registUsername, confirmRegistPassword } = this.state;
     const { activeTabKey } = this.props;
     if (activeTabKey === 'login') {
       this.props.login(loginUsername, loginPassword);
     } else {
+      if (registPassword !== confirmRegistPassword) {
+        message.error('两次填写的密码不一致');
+        return;
+      }
       this.props.regist(registUsername, registPassword);
     }
   }

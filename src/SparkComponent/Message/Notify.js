@@ -36,7 +36,6 @@ export class Notify extends React.Component {
 
   render () {
     const { content, type } = this.props;
-    console.log(content);
 
     return (
       <div

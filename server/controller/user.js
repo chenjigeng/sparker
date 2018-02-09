@@ -14,8 +14,8 @@ userCtrl.regist = async function (req, res, next) {
       msg: '创建成功',
     });
   } catch (err) {
+    console.log(err);
     if (err.code === 'ER_DUP_ENTRY') {
-      console.log('账号重复');
       res.status(200).send({
         code: resCodes.USERNAME_REPEAT,
         msg: '账号重复',

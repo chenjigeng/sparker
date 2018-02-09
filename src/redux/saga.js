@@ -50,7 +50,7 @@ function* loginSaga(action) {
           isLogin: false
         }
       });
-      message.success(result.msg);
+      message.error(result.msg);
     }
   } catch (err) {
     yield put({
@@ -59,7 +59,7 @@ function* loginSaga(action) {
         isLogin: false
       }
     });
-    message.success(err.msg || err.message || err);
+    message.error(err.msg || err.message || err);
   }
   SparkLoading.hide();
 }
@@ -69,7 +69,7 @@ function* registSaga(action) {
     yield put({ type: actionTypes.REGIST_REQUEST});
     SparkLoading.show();
     const { payload: { username, password } } = action;
-    const result = yield Apis.Login(username, password).then(res => res.json());
+    const result = yield Apis.Regist(username, password).then(res => res.json());
     if (result.code === 200) {
       yield put({ 
         type: actionTypes.REGIST_SUCCESS, 
@@ -88,7 +88,7 @@ function* registSaga(action) {
           isLogin: false
         }
       });
-      message.success(result.msg);
+      message.error(result.msg);
     }
   } catch (err) {
     yield put({
@@ -97,7 +97,7 @@ function* registSaga(action) {
         isLogin: false
       }
     });
-    message.success(err.msg || err.message || err);
+    message.error(err.msg || err.message || err);
   }
   SparkLoading.hide();
 }

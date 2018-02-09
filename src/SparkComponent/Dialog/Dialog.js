@@ -49,15 +49,11 @@ export class Dialog extends React.Component {
     );
   }
 
-  handleClick = () => {
-    console.log('hhh');
-  }
-
   render () {
     const { visible, title, onCancel, className } = this.props;
 
     return (
-      <div onClick={this.handleClick} className={`spark-dialog ${className}`}>
+      <div className={`spark-dialog ${className}`}>
         <div className="spark-dialog-wrapper" onClick={onCancel} style={{ display: visible ? 'block' : 'none'}}></div>
         <div 
           className="spark-dialog-content"

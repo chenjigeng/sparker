@@ -3,7 +3,7 @@ import { Navbar } from '../../Component';
 import { connect } from 'react-redux';
 
 @connect(
-  (state) => { console.log(state); return state; },
+  (state) => { return state; },
   (dispatch) => { 
     return {
       onIncrementAsync: () => dispatch({ type: 'INCREMENT_ASYNC' })

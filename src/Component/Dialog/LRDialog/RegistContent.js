@@ -24,6 +24,11 @@ export class RegistContent extends React.Component {
           type="password"
           onChange={(e) => handleFormDataChange('registPassword', e.target.value)}
         />
+        <Input 
+          placeholder="再次填写密码" 
+          type="password"
+          onChange={(e) => handleFormDataChange('confirmRegistPassword', e.target.value)}
+        />
       </div>
     );
   }
