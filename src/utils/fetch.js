@@ -1,7 +1,7 @@
 export function myFetch(url, options) {
   return fetch(url, {
     ...options,
-    credentials: 'include',
+    // credentials: 'include',
     headers: {
       'Content-Type': 'application/json'
     },

@@ -37,7 +37,6 @@ export class Tabs extends React.Component {
   }
 
   updateContentStyle = () => {
-    console.log('content');
     const { activeKey } = this.state;
     const { children } = this.props;
     let activeIndex;
@@ -45,13 +44,12 @@ export class Tabs extends React.Component {
       if (child.key === activeKey) {
         activeIndex = index;
       }
+      return null;
     });
     for (let i = 0; i < this.tabsContent.children.length; i++) {
       this.tabsContent.children[i].style.opacity = '0';
     }
-    console.log(activeIndex);
     this.tabsContent.style.marginLeft = `-${activeIndex * 100}%`;
-    console.log(this.tabsContent);
     const activeContent = this.tabsContent.children[activeIndex];
     activeContent.style.opacity = '1';
   }
