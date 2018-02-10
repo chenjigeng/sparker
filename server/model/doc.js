@@ -30,18 +30,18 @@ const content = JSON.stringify({
 });
 
 
-docModel.create = async function (username, userId) {
+docModel.create = async function (userId) {
   const doc = {
     content,
     name: '未命名文档',
   };
   try {
     const { result } = await connection.$query('Insert Into document Set ?', doc);
-    const prevDocs = await docModel.fetchDocs(username);
+    const prevDocs = await docModel.fetchDocs(userId);
     const docId = result.insertId;
     const newDocs = prevDocs.push(docId);
     const results = await Promise.all([
-      docModel.updateDocs(username, newDocs.toString()),
+      docModel.updateDocs(userId, newDocs.toString()),
       permissionModel.create(userId, docId, Constant.permissionConstant.OWNER),
     ]);
     return Promise.resolve(result);
@@ -51,10 +51,9 @@ docModel.create = async function (username, userId) {
 
 };
 
-docModel.fetchDocs = async (username) => {
+docModel.fetchDocs = async (userId) => {
   try {
-    const { result, fidlds } = await connection.$query('select docs from user where username = ?', [username]);
-    console.log('result is', result);
+    const { result, fidlds } = await connection.$query('select docs from user where user_id = ?', [userId]);
     if (!result.length) {
       return Promise.reject({
         code: resCode.EQUAL,
@@ -70,10 +69,21 @@ docModel.fetchDocs = async (username) => {
   }
 };
 
-docModel.updateDocs = async (username, docs) => {
+docModel.updateDocs = async (userId, docs) => {
   try {
-    const { result } = await connection.$query('update user set docs = ? where username = ?', [docs, username]);
+    const { result } = await connection.$query('update user set docs = ? where user_id = ?', [docs, userId]);
     console.log('resss', result);
+    return Promise.resolve(result);
+  } catch (err) {
+    return Promise.reject(err);
+  }
+};
+
+docModel.fetchUserDocs = async (userId) => {
+  try {
+    const docsId = await docModel.fetchDocs(userId);
+    const { result } = await connection.query('Select * from document where user_id in ?', [docsId.toString()]);
+    console.log('docs result', result);
     return Promise.resolve(result);
   } catch (err) {
     return Promise.reject(err);

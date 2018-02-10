@@ -12,7 +12,7 @@ docCtrl.create = async function (req, res) {
       });
       return;
     }
-    const result = await docModel.create(req.session.username, req.session.userId, );
+    const result = await docModel.create(req.session.userId);
     res.status(200).send({
       code: resCodes.OK,
       docId: result.insertId,

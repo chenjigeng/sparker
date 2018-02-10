@@ -1,6 +1,7 @@
 const connection = require('./index');
 const crypto = require('crypto'); 
 const resCode = require('../config/responseCodes');
+const docModel = require('./doc');
 
 const secret = 'sprakerUser';
 
@@ -18,7 +19,6 @@ userModel.create = async function (username, password) {
   };
   try {
     const { result } = await connection.$query('Insert Into user Set ?', user); 
-    console.log(result);
     return Promise.resolve(result);
   } catch (err) {
     return Promise.reject(err);
@@ -50,5 +50,16 @@ userModel.confirm = async (username, password) => {
   }
 
 };
+
+userModel.fetchUserInfo = async (userId) => {
+  try {
+    const result = await docModel.fetchUserDocs(userId);
+    console.log(result);
+    return Promise.resolve(result);
+  } catch (err) {
+    return Promise.reject(err);
+  }
+};
+  
 
 module.exports = userModel;
