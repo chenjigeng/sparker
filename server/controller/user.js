@@ -7,8 +7,11 @@ userCtrl.regist = async function (req, res, next) {
   const { username, password } = req.body;
   try {
     const result = await userModel.create(username, password);
+    console.log('result', result);    
     req.session.login = true;
     req.session.username = username;
+    req.session.userId = result.insertId;
+    console.log('reqsession', req.session);
     res.status(200).send({
       code: resCodes.OK,
       msg: '创建成功',
@@ -30,6 +33,8 @@ userCtrl.login = async function (req, res, next) {
     const result = await userModel.confirm(username, password);
     req.session.login = true;
     req.session.username = username;
+    req.session.userId = result.user_id;
+    console.log(req.session);
     res.status(200).send({
       code: resCodes.OK,
       msg: '登录成功',

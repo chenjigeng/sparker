@@ -13,4 +13,19 @@ connection.connect((err) => {
   console.log('mysql connect');
 });
 
+connection.$query = function(...args) {
+  return new Promise((resolve, reject) => {
+    connection.query(...args, (err, result, fields) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+      resolve({
+        result,
+        fields
+      });    
+    });
+  });
+};
+
 module.exports = connection;
