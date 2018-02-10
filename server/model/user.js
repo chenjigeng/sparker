@@ -2,6 +2,7 @@ const connection = require('./index');
 const crypto = require('crypto'); 
 const resCode = require('../config/responseCodes');
 const docModel = require('./doc');
+const moment = require('moment');
 
 const secret = 'sprakerUser';
 

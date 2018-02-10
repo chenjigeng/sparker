@@ -1,6 +1,7 @@
 const connection = require('./index');
 const permissionModel = require('./permission');
 const crypto = require('crypto');
+const moment = require('moment');
 
 const Constant = require('../config');
 
@@ -34,12 +35,14 @@ docModel.create = async function (userId) {
   const doc = {
     content,
     name: '未命名文档',
+    create_time: moment(new Date()).format('YYYY-MM-DD HH:mm:ss'),
+    update_time: moment(new Date()).format('YYYY-MM-DD HH:mm:ss'),
   };
   try {
     const { result } = await connection.$query('Insert Into document Set ?', doc);
     const prevDocs = await docModel.fetchDocs(userId);
     const docId = result.insertId;
-    const newDocs = prevDocs.push(docId);
+    const newDocs = prevDocs.concat(docId);
     const results = await Promise.all([
       docModel.updateDocs(userId, newDocs.toString()),
       permissionModel.create(userId, docId, Constant.permissionConstant.OWNER),
@@ -82,7 +85,9 @@ docModel.updateDocs = async (userId, docs) => {
 docModel.fetchUserDocs = async (userId) => {
   try {
     const docsId = await docModel.fetchDocs(userId);
-    const { result } = await connection.query('Select * from document where user_id in ?', [docsId.toString()]);
+    // console.log('(' + docsId.toString() + ')');
+    const sql = 'Select * from document where doc_id in ' + '(' + docsId.toString() + ')';
+    const { result } = await connection.$query(sql);
     console.log('docs result', result);
     return Promise.resolve(result);
   } catch (err) {
