@@ -13,6 +13,7 @@ import { actions } from '../../redux/saga';
     return {
       login: (username, password) => dispatch(actions.requestLogin(username, password)),
       regist: (username, password) => dispatch(actions.requestRegist(username, password)),
+      checkLogin: () => dispatch(actions.requestCheckLogin()),
     };
   }
 )
@@ -23,6 +24,10 @@ export class Navbar extends React.Component {
     registVisible: false,
     activeTabKey: 'login',
   };
+
+  componentDidMount() {
+    this.props.checkLogin();
+  }
 
   closeLRDialog = () => {
     this.setState({

@@ -9,6 +9,7 @@ import { objToCamcelCase } from '../utils';
 export function* mainSaga() {
   yield takeEvery(actionTypes.LOGIN, loginSaga);
   yield takeEvery(actionTypes.REGIST, registSaga);
+  yield takeEvery(actionTypes.CHECK_LOGIN, checkLoginAndFetch);
   yield all([call(DocSaga), call(HomeSaga)]);
 }
 
@@ -23,6 +24,11 @@ export const actions = {
     return {
       type: actionTypes.REGIST,
       payload: { username, password }
+    };
+  },
+  requestCheckLogin: () => {
+    return {
+      type: actionTypes.CHECK_LOGIN
     };
   }
 };
@@ -110,4 +116,41 @@ function* registSaga(action) {
     message.error(err.msg || err.message || err);
   }
   SparkLoading.hide();
+}
+
+function* checkLoginAndFetch() {
+  try {
+    const result = objToCamcelCase(yield Apis.CheckAndFetch().then(res => res.json()));
+    if (result.code === 200) {
+      yield put({
+        type: actionTypes.LOGIN_SUCCESS,
+        payload: {
+          isLogin: true,
+          userInfo: {
+            username: result.username,
+          }
+        }
+      });
+      yield put({
+        type: actionTypes.UPDATE_DOC_LIST,
+        payload: {
+          docs: result.docs,
+        }
+      });
+    } else {
+      yield put({
+        type: actionTypes.LOGIN_FAILURE,
+        payload: {
+          isFetching: false,
+        }
+      });
+    }
+  } catch (err) {
+    yield put({
+      type: actionTypes.LOGIN_FAILURE,
+      payload: {
+        isFetching: false,
+      }
+    });
+  }
 }

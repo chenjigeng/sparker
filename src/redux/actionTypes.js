@@ -11,5 +11,7 @@ export default {
   REGIST_SUCCESS: 'REGIST_SUCCESS',
   REGIST_FAILURE: 'REGIST_FAILURE',
 
+  CHECK_LOGIN: 'CHECK_LOGIN',
+
   ...actionTypes,
 };
