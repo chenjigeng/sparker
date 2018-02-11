@@ -54,6 +54,16 @@ docModel.create = async function (userId) {
 
 };
 
+docModel.fetchDoc = async (docId) => {
+  try {
+    const { result } = await connection.$query('select * from document where doc_id = ?', [docId]);
+    console.log(result);
+    return Promise.resolve(result);
+  } catch (err) {
+    return Promise.reject(err);
+  }
+};
+
 docModel.fetchDocs = async (userId) => {
   try {
     const { result, fidlds } = await connection.$query('select docs from user where user_id = ?', [userId]);

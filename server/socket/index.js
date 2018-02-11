@@ -1,6 +1,7 @@
 const http = require('http');
 const socket = require('socket.io');
 const slate = require('slate');
+const docModel = require('../model/doc');
 const Value = slate.Value;
 function init (app) {
   const server = http.createServer(app);
@@ -29,8 +30,9 @@ function init (app) {
   io.on('connection', function (socket) {
     console.log('connect');
 
-    socket.on('initSocket', ({ docId }) => {
-      socket.emit('init', { value: value });      
+    socket.on('initSocket', async ({ docId }) => {
+      const result = await docModel.fetchDoc(docId);
+      socket.emit('init', { value: Value.fromJSON(JSON.parse(result[0].content)) });      
     });
   
     socket.on('update', (data) => {
