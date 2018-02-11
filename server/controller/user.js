@@ -56,4 +56,29 @@ userCtrl.login = async function (req, res, next) {
   }
 };
 
+userCtrl.check = async function (req, res) {
+  try {
+    if (req.session.login) {
+      const { userId, username } = req.session;
+      const docResult = await userModel.fetchUserInfo(userId);
+      res.status(200).send({
+        code: resCodes.OK,
+        msg: '账号已登录',
+        docs: docResult,
+        username,
+      });
+    } else {
+      res.status(200).send({
+        code: resCodes.NO_LOGIN,
+        msg: '账号未登录',
+      });
+    }
+  } catch (err) {
+    res.status(200).send({
+      code: resCodes.NO_LOGIN,
+      msg: err.msg || err.message || err,
+    });
+  }
+};
+
 module.exports = userCtrl;

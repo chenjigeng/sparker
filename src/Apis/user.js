@@ -13,3 +13,9 @@ export function Regist(username, password) {
     body: JSON.stringify({ username, password })
   });
 }
+
+export function CheckAndFetch() {
+  return myFetch('/api/check', {
+    method: 'POST',
+  });
+}

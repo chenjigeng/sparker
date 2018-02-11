@@ -10,4 +10,7 @@ router.post('/regist', (req, res) => {
   userCtrl.regist(req, res);
 });
 
+router.post('/check', (req, res) => {
+  userCtrl.check(req, res);
+});
 module.exports = router;
