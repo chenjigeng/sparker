@@ -28,7 +28,12 @@ function init (app) {
   
   io.on('connection', function (socket) {
     console.log('connect');
-    socket.emit('init', { value: value });
+
+    io.emit('connect');
+
+    socket.on('initSocket', ({ id, docId }) => {
+      socket.emit('init', { value: value });      
+    });
   
     socket.on('update', (data) => {
       value = value.change().applyOperations(data.ops).value;

@@ -1,4 +1,5 @@
 import { Editor } from 'slate-react';
+import PropTypes from 'prop-types';
 import { CodeBlock, CodeBlockLine } from '../CodeBlock';
 import { Value } from 'slate';
 import PasteLinkify from 'slate-paste-linkify';
@@ -49,6 +50,10 @@ const initialValue = Value.fromJSON({});
 
 class SparkerEditor extends React.Component {
 
+  static propTypes = {
+    match: PropTypes.object.isRequired,
+  };
+
   state = {
     value: initialValue,
   }
@@ -65,12 +70,20 @@ class SparkerEditor extends React.Component {
   }
 
   initSocketEvent = () => {
+    const { match } = this.props;
     this.socket = socketInit();
+    this.socket.on('connect', () => {
+      console.log(this.socket.id, this.socket);      
+      this.socket.emit('initSocket', {
+        docId: match.params.docId,
+        id: this.socket.id
+      });
+    });
     this.socket.on('updateFromOthers', (data) => {
       this.operationQuequ = this.operationQuequ.concat(data.ops);
     });
     this.socket.on('init', (data) => {
-      console.log(data);
+      console.log('data', data);
       this.setState({
         value: Value.fromJSON(data.value),
       });

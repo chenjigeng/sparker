@@ -22,7 +22,7 @@ export class DocList extends React.Component {
       <div 
         className="doc-list"
       >
-        { docs.map((doc) => <DocItem key={doc.docId} doc={doc} />) }
+        { docs.map((doc) => <DocItem key={doc.docId} doc={doc} history={history}/>) }
         { isLogin && <CreateDocButton history={history} /> }        
       </div>
     );
