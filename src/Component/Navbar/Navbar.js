@@ -21,7 +21,7 @@ import { actions } from '../../redux/saga';
 export class Navbar extends React.Component {
 
   state = {
-    lrVisible: false,
+    lrVisible: true,
     registVisible: false,
     activeTabKey: 'login',
   };
@@ -94,7 +94,7 @@ export class Navbar extends React.Component {
         <LRDialog 
           changeActiveTabkey={this.changeActiveTabkey}
           activeTabKey={activeTabKey}
-          visible={!(isFetching || isLogin)} 
+          visible={!(isFetching || isLogin) && lrVisible} 
           onCancel={this.closeLRDialog} 
           login={login}
           regist={regist}

@@ -44,7 +44,6 @@ function* loginSaga(action) {
     SparkLoading.show();
     const { payload: { username, password } } = action;
     const result = objToCamcelCase(yield Apis.Login(username, password).then(res => res.json()));
-    console.log(result); 
     if (result.code === 200) {
       yield put({ 
         type: actionTypes.LOGIN_SUCCESS, 
@@ -55,14 +54,12 @@ function* loginSaga(action) {
           }
         }
       });
-      console.log('login success');
       yield put({
         type: actionTypes.UPDATE_DOC_LIST,
         payload: {
           docs: result.docs,
         }
       });
-      console.log('sss');
       message.success('登录成功');
     } else {
       yield put({

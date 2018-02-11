@@ -15,6 +15,5 @@ export function objToCamcelCase(obj) {
       newObj[newKey] = obj[key];      
     }
   }
-  console.log('obj is', newObj);
   return newObj;
 }

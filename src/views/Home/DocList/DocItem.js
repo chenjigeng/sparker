@@ -10,9 +10,7 @@ export class DocItem extends React.Component {
 
   render () {
     const { doc } = this.props;
-    console.log(moment);
     const updateTime = moment(doc.updateTime).format('YYYY-MM-DD HH:mm');
-    console.log(doc);
 
     return (
       <div className="doc-item">
