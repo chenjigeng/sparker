@@ -29,9 +29,7 @@ function init (app) {
   io.on('connection', function (socket) {
     console.log('connect');
 
-    io.emit('connect');
-
-    socket.on('initSocket', ({ id, docId }) => {
+    socket.on('initSocket', ({ docId }) => {
       socket.emit('init', { value: value });      
     });
   

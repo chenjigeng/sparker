@@ -72,12 +72,8 @@ class SparkerEditor extends React.Component {
   initSocketEvent = () => {
     const { match } = this.props;
     this.socket = socketInit();
-    this.socket.on('connect', () => {
-      console.log(this.socket.id, this.socket);      
-      this.socket.emit('initSocket', {
-        docId: match.params.docId,
-        id: this.socket.id
-      });
+    this.socket.emit('initSocket', {
+      docId: match.params.docId,
     });
     this.socket.on('updateFromOthers', (data) => {
       this.operationQuequ = this.operationQuequ.concat(data.ops);
