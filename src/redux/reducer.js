@@ -1,5 +1,6 @@
 import { combineReducers } from 'redux';
-import * as actionTypes from './actionTypes';
+import actionTypes from './actionTypes';
+import { HomeReducer } from '../views/Home/HomeReducer';
 
 function commonInfoReducer(state = {
   isLogin: false,
@@ -55,4 +56,5 @@ function commonInfoReducer(state = {
 
 export default combineReducers({
   commonInfo: commonInfoReducer,
+  homeInfo: HomeReducer,
 });

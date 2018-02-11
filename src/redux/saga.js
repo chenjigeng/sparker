@@ -2,8 +2,9 @@ import { put, all, call, takeEvery } from 'redux-saga/effects';
 import { DocSaga } from '../views/Doc';
 import { HomeSaga } from '../views/Home';
 import * as Apis from '../Apis';
-import * as actionTypes from './actionTypes';
+import actionTypes from './actionTypes';
 import { SparkLoading, message } from '../SparkComponent';
+import { objToCamcelCase } from '../utils';
 
 export function* mainSaga() {
   yield takeEvery(actionTypes.LOGIN, loginSaga);
@@ -31,7 +32,8 @@ function* loginSaga(action) {
     yield put({ type: actionTypes.LOGIN_REQUEST});
     SparkLoading.show();
     const { payload: { username, password } } = action;
-    const result = yield Apis.Login(username, password).then(res => res.json());
+    const result = objToCamcelCase(yield Apis.Login(username, password).then(res => res.json()));
+    console.log(result); 
     if (result.code === 200) {
       yield put({ 
         type: actionTypes.LOGIN_SUCCESS, 
@@ -42,6 +44,14 @@ function* loginSaga(action) {
           }
         }
       });
+      console.log('login success');
+      yield put({
+        type: actionTypes.UPDATE_DOC_LIST,
+        payload: {
+          docs: result.docs,
+        }
+      });
+      console.log('sss');
       message.success('登录成功');
     } else {
       yield put({
@@ -69,7 +79,7 @@ function* registSaga(action) {
     yield put({ type: actionTypes.REGIST_REQUEST});
     SparkLoading.show();
     const { payload: { username, password } } = action;
-    const result = yield Apis.Regist(username, password).then(res => res.json());
+    const result = objToCamcelCase(yield Apis.Regist(username, password).then(res => res.json()));
     if (result.code === 200) {
       yield put({ 
         type: actionTypes.REGIST_SUCCESS, 

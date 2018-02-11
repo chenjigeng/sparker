@@ -9,7 +9,7 @@ import { Home } from '../views/Home';
 
 const Router = () => (
   <BrowserRouter>
-    <div>
+    <div className="spark-router">
       <Route exact path='/' component={Home} />
       <Route path='/doc/:docId' component={Doc} />
     </div>

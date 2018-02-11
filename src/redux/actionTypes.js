@@ -1,9 +1,15 @@
-export const LOGIN = 'LOGIN';
-export const LOGIN_REQUEST = 'LOGIN_REQUEST';
-export const LOGIN_SUCCESS = 'LOGIN_SUCCESS';
-export const LOGIN_FAILURE = 'LOGIN_FAILURE';
+import { actionTypes } from '../views/Home/HomeReducer';
 
-export const REGIST = 'REGIST';
-export const REGIST_REQUEST = 'REGIST_REQUEST';
-export const REGIST_SUCCESS = 'REGIST_SUCCESS';
-export const REGIST_FAILURE = 'REGIST_FAILURE';
+export default {
+  LOGIN: 'LOGIN',
+  LOGIN_REQUEST: 'LOGIN_REQUEST',
+  LOGIN_SUCCESS: 'LOGIN_SUCCESS',
+  LOGIN_FAILURE: 'LOGIN_FAILURE',
+
+  REGIST: 'REGIST',
+  REGIST_REQUEST: 'REGIST_REQUEST',
+  REGIST_SUCCESS: 'REGIST_SUCCESS',
+  REGIST_FAILURE: 'REGIST_FAILURE',
+
+  ...actionTypes,
+};
