@@ -1,4 +1,3 @@
-
 export const actionTypes = {
   'UPDATE_DOC_LIST': 'UPDATE_DOC_LIST',
   'LOGOUT': 'LOGOUT',

@@ -125,6 +125,7 @@ function* registSaga(action) {
 
 function* checkLoginAndFetch() {
   try {
+    SparkLoading.show();
     const result = objToCamcelCase(yield Apis.CheckAndFetch().then(res => res.json()));
     if (result.code === 200) {
       yield put({
@@ -158,6 +159,7 @@ function* checkLoginAndFetch() {
       }
     });
   }
+  SparkLoading.hide();
 }
 
 function *Logout() {

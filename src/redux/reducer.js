@@ -6,6 +6,7 @@ function commonInfoReducer(state = {
   isLogin: false,
   isLoading: false,
   userInfo: {},
+  isFetching: true,
 }, action) {
   switch(action.type) {
     case actionTypes.LOGIN_REQUEST: {

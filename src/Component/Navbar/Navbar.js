@@ -78,7 +78,7 @@ export class Navbar extends React.Component {
 
   render () {
     const { lrVisible, registVisible, activeTabKey } = this.state;
-    const { login, regist, isLogin, isLoading, userInfo } = this.props;
+    const { login, regist, isLogin, isLoading, userInfo, isFetching } = this.props;
     return (
       <div>
         <Nav>
@@ -94,7 +94,7 @@ export class Navbar extends React.Component {
         <LRDialog 
           changeActiveTabkey={this.changeActiveTabkey}
           activeTabKey={activeTabKey}
-          visible={lrVisible && !isLogin} 
+          visible={!(isFetching || isLogin)} 
           onCancel={this.closeLRDialog} 
           login={login}
           regist={regist}
