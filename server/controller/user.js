@@ -56,6 +56,16 @@ userCtrl.login = async function (req, res, next) {
   }
 };
 
+userCtrl.logout = async function (req, res) {
+  if (req.session) {
+    req.session.login = false;
+  }
+  res.status(200).send({
+    code: resCodes.OK,
+    msg: '登出成功',
+  });
+};
+
 userCtrl.check = async function (req, res) {
   try {
     if (req.session.login) {

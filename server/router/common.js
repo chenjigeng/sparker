@@ -6,6 +6,10 @@ router.post('/login', (req, res) => {
   userCtrl.login(req, res);
 });
 
+router.post('/logout', (req, res) => {
+  userCtrl.logout(req, res);
+});
+
 router.post('/regist', (req, res) => {
   userCtrl.regist(req, res);
 });
@@ -13,4 +17,5 @@ router.post('/regist', (req, res) => {
 router.post('/check', (req, res) => {
   userCtrl.check(req, res);
 });
+
 module.exports = router;
