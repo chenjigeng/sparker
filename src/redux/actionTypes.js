@@ -13,5 +13,7 @@ export default {
 
   CHECK_LOGIN: 'CHECK_LOGIN',
 
+  LOGOUT: 'LOGOUT',
+
   ...actionTypes,
 };

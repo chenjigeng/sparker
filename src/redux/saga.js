@@ -20,6 +20,11 @@ export const actions = {
       payload: { username, password }
     };
   },
+  requestLogout: () => {
+    return {
+      type: actionTypes.LOGOUT,
+    };
+  },
   requestRegist: (username, password) => {
     return {
       type: actionTypes.REGIST,
@@ -30,7 +35,7 @@ export const actions = {
     return {
       type: actionTypes.CHECK_LOGIN
     };
-  }
+  },
 };
 
 function* loginSaga(action) {
@@ -152,5 +157,21 @@ function* checkLoginAndFetch() {
         isFetching: false,
       }
     });
+  }
+}
+
+function *Logout() {
+  try {
+    const result = objToCamcelCase(yield Apis.Logout().then(res => res.json()));
+    if (result.code === 200) {
+      yield put({
+        type: actionTypes.LOGOUT,
+      });
+      message.success('登出成功');
+    } else {
+      message.error('登出失败');      
+    }
+  } catch (err) {
+    message.error('登出失败');
   }
 }

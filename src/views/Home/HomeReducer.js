@@ -1,6 +1,7 @@
 
 export const actionTypes = {
-  'UPDATE_DOC_LIST': 'UPDATE_DOC_LIST'
+  'UPDATE_DOC_LIST': 'UPDATE_DOC_LIST',
+  'LOGOUT': 'LOGOUT',
 };
 
 export function HomeReducer(state = {
@@ -13,6 +14,11 @@ export function HomeReducer(state = {
       return {
         ...state,
         docs: action.payload.docs,
+      };
+    case actionTypes.LOGOUT:
+      return {
+        ...state,
+        docs: [],
       };
     default:
       return state;

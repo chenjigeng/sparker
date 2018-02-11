@@ -14,6 +14,12 @@ export function Regist(username, password) {
   });
 }
 
+export function Logout() {
+  return myFetch('/api/logout', {
+    method: 'POST',
+  });
+}
+
 export function CheckAndFetch() {
   return myFetch('/api/check', {
     method: 'POST',

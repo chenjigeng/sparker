@@ -12,6 +12,7 @@ import { actions } from '../../redux/saga';
   (dispatch) => {
     return {
       login: (username, password) => dispatch(actions.requestLogin(username, password)),
+      logout: () => dispatch(actions.requestLogout()),
       regist: (username, password) => dispatch(actions.requestRegist(username, password)),
       checkLogin: () => dispatch(actions.requestCheckLogin()),
     };
@@ -69,7 +70,7 @@ export class Navbar extends React.Component {
 
     return (
       <React.Fragment>
-        <a href="#">登出</a>
+        <a href="#" onClick={this.props.logout}>登出</a>
         <a href="#">{userInfo.username}</a>
       </React.Fragment>
     );

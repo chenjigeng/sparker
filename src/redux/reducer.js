@@ -28,6 +28,13 @@ function commonInfoReducer(state = {
         ...action.payload
       };
     }
+    case actionTypes.LOGOUT: {
+      return {
+        ...state,
+        isLogin: false,
+        userInfo: null
+      };
+    }
     case actionTypes.REGIST_REQUEST: {
       return {
         ...state,
