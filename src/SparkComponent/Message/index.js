@@ -21,7 +21,6 @@ const MessageManager = {
       duration = 3;
     }
     const messageInstance = this.getInstance();
-    console.log(messageInstance);
     messageInstance.add({
       type,
       content,

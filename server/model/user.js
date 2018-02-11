@@ -55,7 +55,6 @@ userModel.confirm = async (username, password) => {
 userModel.fetchUserInfo = async (userId) => {
   try {
     const result = await docModel.fetchUserDocs(userId);
-    console.log(result);
     return Promise.resolve(result);
   } catch (err) {
     return Promise.reject(err);

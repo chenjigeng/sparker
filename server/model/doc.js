@@ -59,7 +59,7 @@ docModel.fetchDocs = async (userId) => {
     const { result, fidlds } = await connection.$query('select docs from user where user_id = ?', [userId]);
     if (!result.length) {
       return Promise.reject({
-        code: resCode.EQUAL,
+        code: Constant.resCode.EQUAL,
       });
     }
     let docs = [];
@@ -75,7 +75,6 @@ docModel.fetchDocs = async (userId) => {
 docModel.updateDocs = async (userId, docs) => {
   try {
     const { result } = await connection.$query('update user set docs = ? where user_id = ?', [docs, userId]);
-    console.log('resss', result);
     return Promise.resolve(result);
   } catch (err) {
     return Promise.reject(err);
@@ -85,10 +84,11 @@ docModel.updateDocs = async (userId, docs) => {
 docModel.fetchUserDocs = async (userId) => {
   try {
     const docsId = await docModel.fetchDocs(userId);
-    // console.log('(' + docsId.toString() + ')');
+    if (!docsId.length) {
+      return Promise.resolve([]);
+    }
     const sql = 'Select * from document where doc_id in ' + '(' + docsId.toString() + ')';
     const { result } = await connection.$query(sql);
-    console.log('docs result', result);
     return Promise.resolve(result);
   } catch (err) {
     return Promise.reject(err);

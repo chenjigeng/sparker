@@ -19,7 +19,6 @@ docCtrl.create = async function (req, res) {
       msg: '创建文档成功',
     });
   } catch (e) {
-    console.log(e);
     res.status(200).send({
       code: resCodes.CREATE_DOC_ERROR,
       msg: '创建文档失败',
@@ -27,6 +26,5 @@ docCtrl.create = async function (req, res) {
   }
 };
 
-console.log(docCtrl);
 
 module.exports = docCtrl;
