@@ -16,11 +16,11 @@ export class Home extends React.Component {
 
   render () {
     console.log(this.props);
-    const { homeInfo: { docs }, commonInfo } = this.props;
+    const { homeInfo: { docs }, commonInfo, history } = this.props;
     return (
       <div className="home-body">
         <Navbar />
-        <DocList docs={docs} commonInfo={commonInfo}/>
+        <DocList docs={docs} commonInfo={commonInfo} history={history}/>
       </div>
     );
   }

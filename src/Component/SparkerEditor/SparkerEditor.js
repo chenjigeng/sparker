@@ -9,9 +9,10 @@ import React from 'react';
 import { Image, CheckListItem, HoverMenu } from '..';
 import { MarkHotkey, BlockHotkey } from '../../utils';
 import { MarkdownPlugins, CheckListPlugins } from './featurePlugins';
-import { socket } from '../../Socket';
+import { socketInit } from '../../Socket';
 import { Toolbar } from '../Toolbar';
 import './markdown.less';
+
 
 const plugins = [
   PluginPrism({
@@ -59,14 +60,17 @@ class SparkerEditor extends React.Component {
 
   componentDidMount() {
     setInterval(this.clearQueue, 200);
+    console.log('mount');
     this.initSocketEvent();
   }
 
   initSocketEvent = () => {
-    socket.on('updateFromOthers', (data) => {
+    this.socket = socketInit();
+    this.socket.on('updateFromOthers', (data) => {
       this.operationQuequ = this.operationQuequ.concat(data.ops);
     });
-    socket.on('init', (data) => {
+    this.socket.on('init', (data) => {
+      console.log(data);
       this.setState({
         value: Value.fromJSON(data.value),
       });
@@ -86,7 +90,7 @@ class SparkerEditor extends React.Component {
       .filter(o => o.type !== 'set_selection' && o.type !== 'set_value')
       .toJS();
     if (ops.length && needEmit) {
-      socket.emit('update', {
+      this.socket.emit('update', {
         ops,
       });
     }

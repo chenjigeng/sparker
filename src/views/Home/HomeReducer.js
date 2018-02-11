@@ -1,6 +1,10 @@
 export const actionTypes = {
   'UPDATE_DOC_LIST': 'UPDATE_DOC_LIST',
   'LOGOUT': 'LOGOUT',
+  'CREATE_DOC': 'CREATE_DOC',
+  'CREATE_DOC_REQUEST': 'CREATE_DOC_REQUEST',
+  'CREATE_DOC_SUCCESS': 'CREATE_DOC_SUCCESS',
+  'CREATE_DOC_FAILURE': 'CREATE_DOC_FAILURE',
 };
 
 export function HomeReducer(state = {

@@ -14,13 +14,15 @@ export class DocItem extends React.Component {
 
     return (
       <div className="doc-item">
-        <div className="doc-logo" />
-        <div className="doc-content">
-          <div>
-            <span className="doc-title">{doc.name}</span>
-          </div>
-          <div>
-            <span className="doc-time">{updateTime}</span>
+        <div className="doc-card">
+          <div className="doc-logo" />
+          <div className="doc-content">
+            <div>
+              <span className="doc-title">{doc.name}</span>
+            </div>
+            <div>
+              <span className="doc-time">{updateTime}</span>
+            </div>
           </div>
         </div>
       </div>

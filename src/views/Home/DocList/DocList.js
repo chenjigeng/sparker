@@ -10,19 +10,20 @@ export class DocList extends React.Component {
   static propTypes = {
     docs: PropTypes.array.isRequired,
     commonInfo: PropTypes.object.isRequired,
+    history: PropTypes.object.isRequired,
   };
 
   render () {
 
-    const { docs, commonInfo: { isLogin } } = this.props;
+    const { docs, commonInfo: { isLogin }, history } = this.props;
 
 
     return (
       <div 
         className="doc-list"
       >
-        { isLogin && <CreateDocButton /> }
         { docs.map((doc) => <DocItem key={doc.docId} doc={doc} />) }
+        { isLogin && <CreateDocButton history={history} /> }        
       </div>
     );
   }
