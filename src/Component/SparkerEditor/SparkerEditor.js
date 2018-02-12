@@ -94,6 +94,7 @@ class SparkerEditor extends React.Component {
   }
 
   onChange = (change, needEmit = true) => {
+    const { match } = this.props;    
     const { value } = change;
     const ops = change.operations
       .filter(o => o.type !== 'set_selection' && o.type !== 'set_value')
@@ -101,6 +102,7 @@ class SparkerEditor extends React.Component {
     if (ops.length && needEmit) {
       this.socket.emit('update', {
         ops,
+        docId: match.params.docId,
       });
     }
     this.setState({ value });

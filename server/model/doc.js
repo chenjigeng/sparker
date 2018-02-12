@@ -57,7 +57,6 @@ docModel.create = async function (userId) {
 docModel.fetchDoc = async (docId) => {
   try {
     const { result } = await connection.$query('select * from document where doc_id = ?', [docId]);
-    console.log(result);
     return Promise.resolve(result);
   } catch (err) {
     return Promise.reject(err);
@@ -85,6 +84,15 @@ docModel.fetchDocs = async (userId) => {
 docModel.updateDocs = async (userId, docs) => {
   try {
     const { result } = await connection.$query('update user set docs = ? where user_id = ?', [docs, userId]);
+    return Promise.resolve(result);
+  } catch (err) {
+    return Promise.reject(err);
+  }
+};
+
+docModel.updateDoc = async (docId, content) => {
+  try {
+    const { result } = await connection.$query('update document set content = ? where doc_id = ?', [content, docId]);
     return Promise.resolve(result);
   } catch (err) {
     return Promise.reject(err);
