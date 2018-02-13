@@ -19,8 +19,12 @@ app.use(session({
   saveUninitialized: true,
 }));
 app.use(express.static('build'));
-app.use(express.static('./router'));
+
 initRouter(app);
+
+app.get('*', function (req, res) {
+  res.sendFile('../build/index.html');
+});
 
 server.listen(3001, function() {
   console.log('connect');
