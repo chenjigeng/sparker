@@ -24,7 +24,7 @@ app.use(express.static('build'));
 initRouter(app);
 
 app.get('*', function (req, res) {
-  res.sendFile(path.resolve(__dirname + '../build/index.html'));
+  res.sendFile(path.resolve(__dirname + '/../build/index.html'));
 });
 
 server.listen(3001, function() {
