@@ -1,6 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const session = require('express-session');
+const path = require('path');
 const app = express();
 
 const initRouter = require('./router');
@@ -23,7 +24,7 @@ app.use(express.static('build'));
 initRouter(app);
 
 app.get('*', function (req, res) {
-  res.sendFile('../build/index.html');
+  res.sendFile(path.resolve(__dirname + '../build/index.html'));
 });
 
 server.listen(3001, function() {
