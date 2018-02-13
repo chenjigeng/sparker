@@ -9,6 +9,7 @@ const server = require('./socket')(app);
 require('./model');
 
 
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(session({
@@ -17,6 +18,8 @@ app.use(session({
   resave: false,
   saveUninitialized: true,
 }));
+app.use(express.static('build'));
+app.use(express.static('./router'));
 initRouter(app);
 
 server.listen(3001, function() {

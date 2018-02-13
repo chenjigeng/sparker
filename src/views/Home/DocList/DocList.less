@@ -1,6 +1,12 @@
 .doc-list {
   width: 764px;
   margin: 20px auto;
+  height: calc(~"100% - 180px");
+  overflow: auto;
+
+  &::-webkit-scrollbar {
+    width: 0;
+  }
 
   .create-doc-button {
     text-align: center;
