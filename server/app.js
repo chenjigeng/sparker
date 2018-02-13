@@ -19,11 +19,12 @@ app.use(session({
   resave: false,
   saveUninitialized: true,
 }));
-app.use(express.static('build'));
+app.use(express.static(path.resolve(__dirname + '/../build')));
 
 initRouter(app);
 
 app.get('*', function (req, res) {
+  console.log('error');
   res.sendFile(path.resolve(__dirname + '/../build/index.html'));
 });
 
