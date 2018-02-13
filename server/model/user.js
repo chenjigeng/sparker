@@ -19,7 +19,7 @@ userModel.create = async function (username, password) {
     password: enc,
   };
   try {
-    const { result } = await connection.$query('Insert Into user Set ?', user); 
+    const { result } = await connection.$query('Insert Into user Set ?', user);
     return Promise.resolve(result);
   } catch (err) {
     return Promise.reject(err);
@@ -60,6 +60,6 @@ userModel.fetchUserInfo = async (userId) => {
     return Promise.reject(err);
   }
 };
-  
+
 
 module.exports = userModel;

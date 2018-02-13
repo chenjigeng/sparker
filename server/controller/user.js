@@ -7,14 +7,14 @@ userCtrl.regist = async function (req, res, next) {
   const { username, password } = req.body;
   try {
     const result = await userModel.create(username, password);
-    const docResult = await userModel.fetchUserInfo(result.user_id);    
+    // const docResult = await userModel.fetchUserInfo(result.user_id);    
     req.session.login = true;
     req.session.username = username;
     req.session.userId = result.insertId;
     res.status(200).send({
       code: resCodes.OK,
       msg: '创建成功',
-      docs: docResult,
+      docs: [],
     });
   } catch (err) {
     console.log(err);
