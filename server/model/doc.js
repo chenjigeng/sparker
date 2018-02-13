@@ -68,7 +68,7 @@ docModel.fetchDocs = async (userId) => {
     const { result, fidlds } = await connection.$query('select docs from user where user_id = ?', [userId]);
     if (!result.length) {
       return Promise.reject({
-        code: Constant.resCode.EQUAL,
+        code: Constant.resCodes.EQUAL,
       });
     }
     let docs = [];
