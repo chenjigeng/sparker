@@ -1,6 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { SparkerEditor } from '../../Component/SparkerEditor';
+import { Navbar } from '../../Component/Navbar';
 
 @connect(
   (state) => state,
@@ -16,6 +17,7 @@ export class Doc extends React.Component {
     console.log(this.props);
     return (
       <div className="App">
+        <Navbar />
         <SparkerEditor {...this.props}/>
       </div>
     );
