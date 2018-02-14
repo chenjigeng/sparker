@@ -1,6 +1,7 @@
 export const actionTypes = {
   'UPDATE_DOC_LIST': 'UPDATE_DOC_LIST',
   'LOGOUT': 'LOGOUT',
+  'LOGOUT_SUCCESS': 'LOGOUT_SUCCESS',
   'CREATE_DOC': 'CREATE_DOC',
   'CREATE_DOC_REQUEST': 'CREATE_DOC_REQUEST',
   'CREATE_DOC_SUCCESS': 'CREATE_DOC_SUCCESS',
@@ -16,7 +17,7 @@ export function HomeReducer(state = {
         ...state,
         docs: action.payload.docs,
       };
-    case actionTypes.LOGOUT:
+    case actionTypes.LOGOUT_SUCCESS:
       return {
         ...state,
         docs: [],

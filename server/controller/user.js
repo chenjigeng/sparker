@@ -57,9 +57,11 @@ userCtrl.login = async function (req, res, next) {
 };
 
 userCtrl.logout = async function (req, res) {
+  console.log('logout');
   if (req.session) {
     req.session.login = false;
   }
+  console.log(req.session);
   res.status(200).send({
     code: resCodes.OK,
     msg: '登出成功',

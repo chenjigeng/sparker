@@ -10,6 +10,7 @@ export function* mainSaga() {
   yield takeEvery(actionTypes.LOGIN, loginSaga);
   yield takeEvery(actionTypes.REGIST, registSaga);
   yield takeEvery(actionTypes.CHECK_LOGIN, checkLoginAndFetch);
+  yield takeEvery(actionTypes.LOGOUT, Logout);
   yield all([call(DocSaga), call(HomeSaga)]);
 }
 
@@ -162,9 +163,10 @@ function* checkLoginAndFetch() {
 function *Logout() {
   try {
     const result = objToCamcelCase(yield Apis.Logout().then(res => res.json()));
+    console.log(result);
     if (result.code === 200) {
       yield put({
-        type: actionTypes.LOGOUT,
+        type: actionTypes.LOGOUT_SUCCESS,
       });
       message.success('登出成功');
     } else {

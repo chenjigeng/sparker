@@ -7,6 +7,7 @@ router.post('/login', (req, res) => {
 });
 
 router.post('/logout', (req, res) => {
+  console.log('logout');
   userCtrl.logout(req, res);
 });
 

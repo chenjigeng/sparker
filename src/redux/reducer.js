@@ -29,7 +29,7 @@ function commonInfoReducer(state = {
         ...action.payload
       };
     }
-    case actionTypes.LOGOUT: {
+    case actionTypes.LOGOUT_SUCCESS: {
       return {
         ...state,
         isLogin: false,
