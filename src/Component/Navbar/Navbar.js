@@ -76,6 +76,11 @@ export class Navbar extends React.Component {
     );
   }
 
+  handleGoToHome = () => {
+    const { history } = this.props;
+    history.push('/');
+  }
+
   render () {
     const { lrVisible, registVisible, activeTabKey } = this.state;
     const { login, regist, isLogin, isLoading, userInfo, isFetching } = this.props;
@@ -83,7 +88,7 @@ export class Navbar extends React.Component {
       <div>
         <Nav>
           <Nav.title>
-            Sparker文档
+            <span onClick={this.handleGoToHome}>Sparker文档</span>
           </Nav.title>
           <Nav.content className="spark-content">
             {

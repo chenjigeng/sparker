@@ -15,11 +15,10 @@ import { DocList } from './DocList';
 export class Home extends React.Component {
 
   render () {
-    console.log(this.props);
     const { homeInfo: { docs }, commonInfo, history } = this.props;
     return (
       <div className="home-body">
-        <Navbar />
+        <Navbar history={history}/>
         <DocList docs={docs} commonInfo={commonInfo} history={history}/>
       </div>
     );

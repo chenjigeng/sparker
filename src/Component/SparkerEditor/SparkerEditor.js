@@ -65,7 +65,6 @@ class SparkerEditor extends React.Component {
 
   componentDidMount() {
     setInterval(this.clearQueue, 200);
-    console.log('mount');
     this.initSocketEvent();
   }
 
@@ -79,7 +78,6 @@ class SparkerEditor extends React.Component {
       this.operationQuequ = this.operationQuequ.concat(data.ops);
     });
     this.socket.on('init', (data) => {
-      console.log('data', data);
       this.setState({
         value: Value.fromJSON(data.value),
       });

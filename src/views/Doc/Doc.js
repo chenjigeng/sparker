@@ -13,11 +13,10 @@ import { Navbar } from '../../Component/Navbar';
 )
 export class Doc extends React.Component {
   render () {
-    console.log('docs');
-    console.log(this.props);
+    const { history } = this.props;
     return (
       <div className="App">
-        <Navbar />
+        <Navbar history={history}/>
         <SparkerEditor {...this.props}/>
       </div>
     );
