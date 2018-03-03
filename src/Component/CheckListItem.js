@@ -1,4 +1,5 @@
 import React from 'react';
+import { CheckBox } from '../SparkComponent';
 
 /**
  * Check list item.
@@ -30,22 +31,14 @@ export class CheckListItem extends React.Component {
   render() {
     const { attributes, children, node } = this.props;
     const checked = node.data.get('checked');
+    console.log(checked);
     return (
-      <div
-        className={`check-list-item ${checked ? 'checked' : ''}`}
-        {...attributes}
-      >
-        <span>
-          <input
-            type="checkbox"
-            checked={checked}
-            onChange={this.onChange}
-          />
-        </span>
-        <span>
-          {children}
-        </span>
-      </div>
+      <CheckBox
+        className="check-list-item"
+        checked={checked}
+        onChange={this.onChange}
+        attributes={attributes}
+      >{children}</CheckBox>
     );
   }
 
