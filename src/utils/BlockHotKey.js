@@ -5,7 +5,7 @@ export function BlockHotkey(options) {
   return {
     onKeyDown(event, change, editor) {
       // Check that the key pressed matches our `key` option.
-      if (!event.metaKey || event.key !== key || !event.shiftKey) return;
+      if (!(event.metaKey || event.ctrlKey) || event.key !== key || !event.shiftKey) return;
       // Prevent the default characters from being inserted.
       event.preventDefault();
       const { value } = editor;

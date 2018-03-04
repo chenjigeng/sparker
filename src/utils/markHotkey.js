@@ -5,7 +5,7 @@ export function MarkHotkey(options) {
   return {
     onKeyDown(event, change, editor) {
       // Check that the key pressed matches our `key` option.
-      if (!event.metaKey || event.key !== key) return;
+      if (!(event.metaKey || event.ctrlKey) || event.key !== key) return;
       // Prevent the default characters from being inserted.
       event.preventDefault();
       const { value } = editor;
