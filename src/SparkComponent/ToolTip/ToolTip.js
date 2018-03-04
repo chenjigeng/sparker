@@ -5,7 +5,6 @@ export class ToolTip extends React.Component {
 
   updateToolTip = () => {
     const clientRect = this.content.getClientRects()[0];
-    console.log(this.popup.clientWidth);
     const popupLeft = clientRect.x - this.popup.clientWidth / 2 + clientRect.width / 2;
     const popupTop = clientRect.y + clientRect.height + 10;
     this.popup.style.left = `${popupLeft}px`;
