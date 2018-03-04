@@ -69,47 +69,51 @@ export class Toolbar extends React.Component {
   }
 
   renderButtons = () => {
+
+    const isMac = navigator.userAgent.match('Mac') ? true : false;
+    const key = isMac ? '⌘' : 'ctrl';
+
     const list = [
       this.renderButton('bold', Icons.MdBoldIcon, (
         <div>
           <div>粗体</div>
-          <div>⌘+B</div>
+          <div>{key}+B</div>
         </div>
       ), true),
       this.renderButton('italic', Icons.MdItalicIcon, (
         <div>
           <div>斜体</div>
-          <div>⌘+I</div>
+          <div>{key}+I</div>
         </div>
       ), true),
       this.renderButton('strikethrough', Icons.MdStrikethroughIcon, (
         <div>
           <div>下划线</div>
-          <div>⌘+S</div>
+          <div>{key}+S</div>
         </div>
       ) ,true),
       this.renderButton('underline', Icons.MdUnderlineIcon, (
         <div>
           <div>下划线</div>
-          <div>⌘+U</div>
+          <div>{key}+U</div>
         </div>
       ), true),
       this.renderButton('order-list', Icons.GoListOrderIcon, (
         <div>
           <div>有序列表</div>
-          <div>⌘+Shift+O</div>
+          <div>{key}+Shift+O</div>
         </div>
       )),
       this.renderButton('unorder-list', Icons.GoListUnorderIcon, (
         <div>
           <div>无序列表</div>
-          <div>⌘+Shift+U</div>
+          <div>{key}+Shift+U</div>
         </div>
       )),
       this.renderButton('check-list-item', Icons.MdCheckBoxIcon, (
         <div>
           <div>任务列表</div>
-          <div>⌘+Shift+C</div>
+          <div>{key}+Shift+C</div>
         </div>
       )),
     ];
