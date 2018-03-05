@@ -31,7 +31,6 @@ export class CheckListItem extends React.Component {
   render() {
     const { attributes, children, node } = this.props;
     const checked = node.data.get('checked');
-    console.log(checked);
     return (
       <CheckBox
         className="check-list-item"
