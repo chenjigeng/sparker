@@ -38,6 +38,7 @@ function init (app) {
 
     socket.on('initSocket', async ({ docId }) => {
       const doc = await redisClient.sget(docId);
+      // 若redis有缓存，则直接从redis上取
       if (doc) {
         socket.emit('init', { value: Value.fromJSON(JSON.parse(doc)) });
         return;
@@ -45,8 +46,6 @@ function init (app) {
       const result = await docModel.fetchDoc(docId);
       const value = Value.fromJSON(JSON.parse(result[0].content));
       redisClient.set(docId, result[0].content);
-      console.log(result[0].content);
-      console.log(docId);  
       socket.emit('init', { value });      
     });
   
