@@ -1,5 +1,6 @@
 import React from 'react';
-import { cos } from '../helpers';
+import { cos } from '../../helpers';
+import './Image.less';
 
 export class Image extends React.Component {
 
@@ -30,7 +31,7 @@ export class Image extends React.Component {
   render () {
     const { node, editor } = this.props;
     const srcUrl = node.data.get('url');
-    return srcUrl ? <img src={srcUrl} alt='preview'/> : <span>Loading</span>;
+    return srcUrl ? <img src={srcUrl} alt='preview'/> : <div className="img-loading">图片上传中...</div>;
   }
 }
 
