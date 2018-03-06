@@ -12,26 +12,6 @@ const storeValues = {
 function init (app) {
   const server = http.createServer(app);
   const io = socket(server);
-  let value = Value.fromJSON({
-    document: {
-      nodes: [
-        {
-          object: 'block',
-          type: 'paragraph',
-          nodes: [
-            {
-              object: 'text',
-              leaves: [
-                {
-                  text: 'Hello World'
-                }
-              ]
-            }
-          ]
-        }
-      ]
-    }
-  });
   
   io.on('connection', function (socket) {
     console.log('connect');
