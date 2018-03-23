@@ -17,12 +17,12 @@ function onTab (event, change) {
   if (value.isExpanded) return;
 
   const { startBlock, startOffset, endOffset } = value;
-  if (startBlock.type === 'code') {
-    event.preventDefault();
-    change.delete();
-    change.insertText('  ');
-    return true;
-  }
+  // if (startBlock.type === 'code') {
+  event.preventDefault();
+  change.delete();
+  change.insertText('  ');
+  return true;
+  // }
 }
 
 function onSpace (event, change) {
