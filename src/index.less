@@ -19,15 +19,34 @@ body {
   /* margin-bottom: 40px; */
 }
 
-.markdown-body {
-  width: 80%;
-  box-sizing: border-box;
-  margin: auto;
-  background: white;
-  padding: 50px 100px 20px 100px;
-  margin-bottom: 40px;
-  box-shadow: 0 1px 6px #ccc;
+@media screen and (max-width: 750px) {
+  .markdown-body {
+    width: 100%;
+    box-sizing: border-box;
+    margin: auto;
+    background: white;
+    padding: 15px;
+    margin-bottom: 40px;
+    box-shadow: 0 1px 6px #ccc;
+  }
+
+  .menu .search {
+    display: none;
+  }
 }
+
+@media screen and (min-width: 750px) {
+  .markdown-body {
+    width: 80%;
+    box-sizing: border-box;
+    margin: auto;
+    background: white;
+    padding: 50px 100px 20px 100px;
+    margin-bottom: 40px;
+    box-shadow: 0 1px 6px #ccc;
+  }
+}
+
 
 
 ol, ul {
