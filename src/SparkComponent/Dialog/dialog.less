@@ -1,0 +1,77 @@
+.spark-dialog-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: black;
+  opacity: 0.3;
+  z-index: 999;
+}
+
+.spark-dialog {
+  transition: all 0.3s ease-in-out;
+}
+
+.spark-dialog-content {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  background: white;
+  box-shadow: 0 1px 3px rgba(0,0,0,.3);
+  border-radius: 4px;
+  transition: all 0.3s ease-in-out;
+  left: 50% !important;
+  top: 15% !important;
+  transform: translateX(-50%);
+  transition: all 0.3s ease-in-out; 
+  min-width: 20%;
+
+  .spark-dialog-header {
+    padding: 20px;
+    text-align: center;
+    border-bottom: 1px solid #dfe6ec;
+    position: relative;
+    font-size: 16px;
+    font-weight: 700;
+    color: #1f2d3d;
+  }
+
+  .spark-dialog-body {
+    padding: 30px 20px;
+    color: #48576a;
+    font-size: 14px;
+  }
+
+  .spark-dialog-footer {
+    font-size: 14px;
+    padding: 20px;
+    border-top: 1px solid #dfe6ec;
+  }
+
+  .spark-icon-close {
+    font-family: spark-icon !important;
+    cursor: pointer;
+    speak: none;
+    font-style: normal;
+    font-weight: 400;
+    font-variant: normal;
+    text-transform: none;
+    line-height: 1;
+    vertical-align: baseline;
+    display: inline-block;
+    -webkit-font-smoothing: antialiased;
+    color: #8492a6;
+    &:before {
+      content: "\E60C";
+    }
+    &:hover {
+      color: #20a0ff;
+    }
+
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+}

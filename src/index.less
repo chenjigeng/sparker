@@ -1,0 +1,78 @@
+body {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimSun, sans-serif;
+}
+
+.editor {
+  box-sizing: border-box;
+}
+
+.highlight {
+  background: #ffeeba;
+}
+
+.editor-container {
+  overflow-y: auto;
+  overflow-x: hidden;
+  height: calc(~"100% - 48px");
+  /* margin-bottom: 40px; */
+}
+
+@media screen and (max-width: 750px) {
+  .markdown-body {
+    width: 100%;
+    box-sizing: border-box;
+    margin: auto;
+    background: white;
+    padding: 15px;
+    margin-bottom: 40px;
+    box-shadow: 0 1px 6px #ccc;
+  }
+
+  .menu .search {
+    display: none;
+  }
+}
+
+@media screen and (min-width: 750px) {
+  .markdown-body {
+    width: 80%;
+    box-sizing: border-box;
+    margin: auto;
+    background: white;
+    padding: 50px 100px 20px 100px;
+    margin-bottom: 40px;
+    box-shadow: 0 1px 6px #ccc;
+  }
+}
+
+
+
+ol, ul {
+  padding-left: 0;
+}
+
+.editor ul li, .editor li {
+  margin-left: 40px;
+}
+
+.editor ul ul li {
+  margin-left: 60px;
+}
+
+.editor ul ul ul li {
+  margin-left: 80px;
+}
+
+&::-webkit-scrollbar {
+  width: 0;
+}
+
+html body .editor {
+  height: calc(~"100% - 53px");
+}
+
+html, body, #root {
+  height: 100%;
+}
