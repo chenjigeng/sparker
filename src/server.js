@@ -6,6 +6,9 @@ import App from './App';
 import store from './redux';
 import { Provider } from 'react-redux';
 import initServer from './server/app';
+const path = require('path');
+
+console.log(__dirname);
 
 // const App = require('./App');
 const assets = require(process.env.RAZZLE_ASSETS_MANIFEST);

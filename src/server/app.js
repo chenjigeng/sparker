@@ -2,6 +2,8 @@ import initRouter from './router';
 import './model';
 
 const bodyParser = require('body-parser');
+const express = require('express');
+const path = require('path');
 const session = require('express-session');
 // const path = require('path');
 // const cors = require('cors');
@@ -17,6 +19,7 @@ export default function initServer (app) {
   //   res.header('Access-Control-Allow-Credentials','true');
   //   next();
   // })
+
   app.use(bodyParser.json());
   app.use(bodyParser.urlencoded({ extended: false }));
   app.use(session({
@@ -25,6 +28,11 @@ export default function initServer (app) {
     resave: false,
     saveUninitialized: true,
   }));
+  console.log(path.resolve(__dirname + '../../../build/public'));
+  console.log(path.resolve(__dirname + '/static'))
+  app.use(express.static(path.resolve(__dirname + '../../../build/public')));
+  app.use(express.static(path.resolve(__dirname + '../../../build/static')));  
+  app.use(express.static(path.resolve(__dirname + '../../../build')));
   
   initRouter(app);
   

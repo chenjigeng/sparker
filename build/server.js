@@ -4286,7 +4286,7 @@ var Router = function Router() {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_react__ = __webpack_require__("react");
+/* WEBPACK VAR INJECTION */(function(__dirname) {/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_react__ = __webpack_require__("react");
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_react___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_react__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_react_router_dom__ = __webpack_require__("react-router-dom");
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_react_router_dom___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_react_router_dom__);
@@ -4307,6 +4307,9 @@ var Router = function Router() {
 
 
 
+var path = __webpack_require__("path");
+
+console.log(__dirname);
 
 // const App = require('./App');
 var assets = __webpack_require__("./build/assets.json");
@@ -4335,6 +4338,7 @@ server.use(__WEBPACK_IMPORTED_MODULE_2_express___default.a.static("/Users/chenji
 });
 
 /* harmony default export */ __webpack_exports__["a"] = (server);
+/* WEBPACK VAR INJECTION */}.call(__webpack_exports__, "src"))
 
 /***/ }),
 
@@ -4342,13 +4346,15 @@ server.use(__WEBPACK_IMPORTED_MODULE_2_express___default.a.static("/Users/chenji
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony export (immutable) */ __webpack_exports__["a"] = initServer;
+/* WEBPACK VAR INJECTION */(function(__dirname) {/* harmony export (immutable) */ __webpack_exports__["a"] = initServer;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__router__ = __webpack_require__("./src/server/router/index.js");
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__model__ = __webpack_require__("./src/server/model/index.js");
 
 
 
 var bodyParser = __webpack_require__("body-parser");
+var express = __webpack_require__("express");
+var path = __webpack_require__("path");
 var session = __webpack_require__("express-session");
 // const path = require('path');
 // const cors = require('cors');
@@ -4363,6 +4369,7 @@ function initServer(app) {
   //   res.header('Access-Control-Allow-Credentials','true');
   //   next();
   // })
+
   app.use(bodyParser.json());
   app.use(bodyParser.urlencoded({ extended: false }));
   app.use(session({
@@ -4371,9 +4378,15 @@ function initServer(app) {
     resave: false,
     saveUninitialized: true
   }));
+  console.log(path.resolve(__dirname + '../../../build/public'));
+  console.log(path.resolve(__dirname + '/static'));
+  app.use(express.static(path.resolve(__dirname + '../../../build/public')));
+  app.use(express.static(path.resolve(__dirname + '../../../build/static')));
+  app.use(express.static(path.resolve(__dirname + '../../../build')));
 
   Object(__WEBPACK_IMPORTED_MODULE_0__router__["a" /* default */])(app);
 }
+/* WEBPACK VAR INJECTION */}.call(__webpack_exports__, "src/server"))
 
 /***/ }),
 
@@ -6406,6 +6419,13 @@ module.exports = require("moment");
 /***/ (function(module, exports) {
 
 module.exports = require("mysql");
+
+/***/ }),
+
+/***/ "path":
+/***/ (function(module, exports) {
+
+module.exports = require("path");
 
 /***/ }),
 
