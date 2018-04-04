@@ -1,13 +1,10 @@
 import React from 'react';
 import { Nav } from '../../SparkComponent';
 import { LRDialog } from '../Dialog';
-// import './Navbar.less';
+import './Navbar.less';
 import { connect } from 'react-redux';
 import { actions } from '../../redux/saga';
 
-if (process.env.BUILD_TARGET !== 'server') {
-  require('./Navbar.less');
-}
 
 @connect(
   (state) => {
