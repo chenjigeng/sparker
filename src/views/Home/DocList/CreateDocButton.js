@@ -15,6 +15,7 @@ export class CreateDocButton extends React.Component {
       .createDoc()
       .then(res => res.json())
       .then(res => {
+        console.log(res);
         history.push(`/doc/${res.docId}`, { docId: res.docId });
       });
   }

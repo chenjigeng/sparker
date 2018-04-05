@@ -41,11 +41,11 @@ docModel.create = async function (userId) {
     const prevDocs = await docModel.fetchDocs(userId);
     const docId = result.insertId;
     const newDocs = prevDocs.concat(docId);
-    const results = await Promise.all([
+    await Promise.all([
       docModel.updateDocs(userId, newDocs.toString()),
       permissionModel.create(userId, docId, Constant.permissionConstant.OWNER),
     ]);
-    return Promise.resolve(results);
+    return Promise.resolve(result);
   } catch (err) {
     return Promise.reject(err);
   }
