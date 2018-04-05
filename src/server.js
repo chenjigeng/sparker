@@ -9,6 +9,7 @@ import initServer from './server/app';
 const path = require('path');
 
 console.log(__dirname);
+c
 
 // const App = require('./App');
 const assets = require(process.env.RAZZLE_ASSETS_MANIFEST);
@@ -38,7 +39,7 @@ server
     <head>
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
         <meta charset="utf-8" />
-        <title>Welcome to Razzle</title>
+        <title>Welcome to Sparker</title>
         <meta name="viewport" content="width=device-width, initial-scale=1">
         ${assets.client.css
           ? `<link rel="stylesheet" href="${assets.client.css}">`
