@@ -2,6 +2,12 @@ const autoprefixer = require('autoprefixer');
 const ExtractTextPlugin = require('extract-text-webpack-plugin');
 const SWPrecacheWebpackPlugin = require('sw-precache-webpack-plugin');
 const ManifestPlugin = require('webpack-manifest-plugin');
+const AssetsPlugin = require('assets-webpack-plugin');
+const fs = require('fs');
+const path = require('path');
+
+const appDirectory = fs.realpathSync(process.cwd());
+const resolveApp = relativePath => path.resolve(appDirectory, relativePath);
 
 module.exports =  {
   modify: (config, {target, dev}, webpack) => {
@@ -33,6 +39,7 @@ module.exports =  {
                 loader: require.resolve('css-loader'),
                 options: {
                   importLoaders: 1,
+                  minimize: true,
                 },
               },
               {
