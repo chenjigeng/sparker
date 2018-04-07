@@ -1,7 +1,6 @@
 const redis = require('redis');
 
 const client = redis.createClient();
-console.log('22');
 
 client.sget = function (key) {
   return new Promise((resolve, reject) => {

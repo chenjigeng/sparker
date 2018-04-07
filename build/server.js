@@ -1,4 +1,611 @@
 /******/ (function(modules) { // webpackBootstrap
+/******/ 	function hotDownloadUpdateChunk(chunkId) { // eslint-disable-line no-unused-vars
+/******/ 		var chunk = require("./" + "" + chunkId + "." + hotCurrentHash + ".hot-update.js");
+/******/ 		hotAddUpdateChunk(chunk.id, chunk.modules);
+/******/ 	}
+/******/ 	
+/******/ 	function hotDownloadManifest() { // eslint-disable-line no-unused-vars
+/******/ 		try {
+/******/ 			var update = require("./" + "" + hotCurrentHash + ".hot-update.json");
+/******/ 		} catch(e) {
+/******/ 			return Promise.resolve();
+/******/ 		}
+/******/ 		return Promise.resolve(update);
+/******/ 	}
+/******/ 	
+/******/ 	function hotDisposeChunk(chunkId) { //eslint-disable-line no-unused-vars
+/******/ 		delete installedChunks[chunkId];
+/******/ 	}
+/******/
+/******/ 	
+/******/ 	
+/******/ 	var hotApplyOnUpdate = true;
+/******/ 	var hotCurrentHash = "3ee457e38a399f1df989"; // eslint-disable-line no-unused-vars
+/******/ 	var hotRequestTimeout = 10000;
+/******/ 	var hotCurrentModuleData = {};
+/******/ 	var hotCurrentChildModule; // eslint-disable-line no-unused-vars
+/******/ 	var hotCurrentParents = []; // eslint-disable-line no-unused-vars
+/******/ 	var hotCurrentParentsTemp = []; // eslint-disable-line no-unused-vars
+/******/ 	
+/******/ 	function hotCreateRequire(moduleId) { // eslint-disable-line no-unused-vars
+/******/ 		var me = installedModules[moduleId];
+/******/ 		if(!me) return __webpack_require__;
+/******/ 		var fn = function(request) {
+/******/ 			if(me.hot.active) {
+/******/ 				if(installedModules[request]) {
+/******/ 					if(installedModules[request].parents.indexOf(moduleId) < 0)
+/******/ 						installedModules[request].parents.push(moduleId);
+/******/ 				} else {
+/******/ 					hotCurrentParents = [moduleId];
+/******/ 					hotCurrentChildModule = request;
+/******/ 				}
+/******/ 				if(me.children.indexOf(request) < 0)
+/******/ 					me.children.push(request);
+/******/ 			} else {
+/******/ 				console.warn("[HMR] unexpected require(" + request + ") from disposed module " + moduleId);
+/******/ 				hotCurrentParents = [];
+/******/ 			}
+/******/ 			return __webpack_require__(request);
+/******/ 		};
+/******/ 		var ObjectFactory = function ObjectFactory(name) {
+/******/ 			return {
+/******/ 				configurable: true,
+/******/ 				enumerable: true,
+/******/ 				get: function() {
+/******/ 					return __webpack_require__[name];
+/******/ 				},
+/******/ 				set: function(value) {
+/******/ 					__webpack_require__[name] = value;
+/******/ 				}
+/******/ 			};
+/******/ 		};
+/******/ 		for(var name in __webpack_require__) {
+/******/ 			if(Object.prototype.hasOwnProperty.call(__webpack_require__, name) && name !== "e") {
+/******/ 				Object.defineProperty(fn, name, ObjectFactory(name));
+/******/ 			}
+/******/ 		}
+/******/ 		fn.e = function(chunkId) {
+/******/ 			if(hotStatus === "ready")
+/******/ 				hotSetStatus("prepare");
+/******/ 			hotChunksLoading++;
+/******/ 			return __webpack_require__.e(chunkId).then(finishChunkLoading, function(err) {
+/******/ 				finishChunkLoading();
+/******/ 				throw err;
+/******/ 			});
+/******/ 	
+/******/ 			function finishChunkLoading() {
+/******/ 				hotChunksLoading--;
+/******/ 				if(hotStatus === "prepare") {
+/******/ 					if(!hotWaitingFilesMap[chunkId]) {
+/******/ 						hotEnsureUpdateChunk(chunkId);
+/******/ 					}
+/******/ 					if(hotChunksLoading === 0 && hotWaitingFiles === 0) {
+/******/ 						hotUpdateDownloaded();
+/******/ 					}
+/******/ 				}
+/******/ 			}
+/******/ 		};
+/******/ 		return fn;
+/******/ 	}
+/******/ 	
+/******/ 	function hotCreateModule(moduleId) { // eslint-disable-line no-unused-vars
+/******/ 		var hot = {
+/******/ 			// private stuff
+/******/ 			_acceptedDependencies: {},
+/******/ 			_declinedDependencies: {},
+/******/ 			_selfAccepted: false,
+/******/ 			_selfDeclined: false,
+/******/ 			_disposeHandlers: [],
+/******/ 			_main: hotCurrentChildModule !== moduleId,
+/******/ 	
+/******/ 			// Module API
+/******/ 			active: true,
+/******/ 			accept: function(dep, callback) {
+/******/ 				if(typeof dep === "undefined")
+/******/ 					hot._selfAccepted = true;
+/******/ 				else if(typeof dep === "function")
+/******/ 					hot._selfAccepted = dep;
+/******/ 				else if(typeof dep === "object")
+/******/ 					for(var i = 0; i < dep.length; i++)
+/******/ 						hot._acceptedDependencies[dep[i]] = callback || function() {};
+/******/ 				else
+/******/ 					hot._acceptedDependencies[dep] = callback || function() {};
+/******/ 			},
+/******/ 			decline: function(dep) {
+/******/ 				if(typeof dep === "undefined")
+/******/ 					hot._selfDeclined = true;
+/******/ 				else if(typeof dep === "object")
+/******/ 					for(var i = 0; i < dep.length; i++)
+/******/ 						hot._declinedDependencies[dep[i]] = true;
+/******/ 				else
+/******/ 					hot._declinedDependencies[dep] = true;
+/******/ 			},
+/******/ 			dispose: function(callback) {
+/******/ 				hot._disposeHandlers.push(callback);
+/******/ 			},
+/******/ 			addDisposeHandler: function(callback) {
+/******/ 				hot._disposeHandlers.push(callback);
+/******/ 			},
+/******/ 			removeDisposeHandler: function(callback) {
+/******/ 				var idx = hot._disposeHandlers.indexOf(callback);
+/******/ 				if(idx >= 0) hot._disposeHandlers.splice(idx, 1);
+/******/ 			},
+/******/ 	
+/******/ 			// Management API
+/******/ 			check: hotCheck,
+/******/ 			apply: hotApply,
+/******/ 			status: function(l) {
+/******/ 				if(!l) return hotStatus;
+/******/ 				hotStatusHandlers.push(l);
+/******/ 			},
+/******/ 			addStatusHandler: function(l) {
+/******/ 				hotStatusHandlers.push(l);
+/******/ 			},
+/******/ 			removeStatusHandler: function(l) {
+/******/ 				var idx = hotStatusHandlers.indexOf(l);
+/******/ 				if(idx >= 0) hotStatusHandlers.splice(idx, 1);
+/******/ 			},
+/******/ 	
+/******/ 			//inherit from previous dispose call
+/******/ 			data: hotCurrentModuleData[moduleId]
+/******/ 		};
+/******/ 		hotCurrentChildModule = undefined;
+/******/ 		return hot;
+/******/ 	}
+/******/ 	
+/******/ 	var hotStatusHandlers = [];
+/******/ 	var hotStatus = "idle";
+/******/ 	
+/******/ 	function hotSetStatus(newStatus) {
+/******/ 		hotStatus = newStatus;
+/******/ 		for(var i = 0; i < hotStatusHandlers.length; i++)
+/******/ 			hotStatusHandlers[i].call(null, newStatus);
+/******/ 	}
+/******/ 	
+/******/ 	// while downloading
+/******/ 	var hotWaitingFiles = 0;
+/******/ 	var hotChunksLoading = 0;
+/******/ 	var hotWaitingFilesMap = {};
+/******/ 	var hotRequestedFilesMap = {};
+/******/ 	var hotAvailableFilesMap = {};
+/******/ 	var hotDeferred;
+/******/ 	
+/******/ 	// The update info
+/******/ 	var hotUpdate, hotUpdateNewHash;
+/******/ 	
+/******/ 	function toModuleId(id) {
+/******/ 		var isNumber = (+id) + "" === id;
+/******/ 		return isNumber ? +id : id;
+/******/ 	}
+/******/ 	
+/******/ 	function hotCheck(apply) {
+/******/ 		if(hotStatus !== "idle") throw new Error("check() is only allowed in idle status");
+/******/ 		hotApplyOnUpdate = apply;
+/******/ 		hotSetStatus("check");
+/******/ 		return hotDownloadManifest(hotRequestTimeout).then(function(update) {
+/******/ 			if(!update) {
+/******/ 				hotSetStatus("idle");
+/******/ 				return null;
+/******/ 			}
+/******/ 			hotRequestedFilesMap = {};
+/******/ 			hotWaitingFilesMap = {};
+/******/ 			hotAvailableFilesMap = update.c;
+/******/ 			hotUpdateNewHash = update.h;
+/******/ 	
+/******/ 			hotSetStatus("prepare");
+/******/ 			var promise = new Promise(function(resolve, reject) {
+/******/ 				hotDeferred = {
+/******/ 					resolve: resolve,
+/******/ 					reject: reject
+/******/ 				};
+/******/ 			});
+/******/ 			hotUpdate = {};
+/******/ 			var chunkId = 0;
+/******/ 			{ // eslint-disable-line no-lone-blocks
+/******/ 				/*globals chunkId */
+/******/ 				hotEnsureUpdateChunk(chunkId);
+/******/ 			}
+/******/ 			if(hotStatus === "prepare" && hotChunksLoading === 0 && hotWaitingFiles === 0) {
+/******/ 				hotUpdateDownloaded();
+/******/ 			}
+/******/ 			return promise;
+/******/ 		});
+/******/ 	}
+/******/ 	
+/******/ 	function hotAddUpdateChunk(chunkId, moreModules) { // eslint-disable-line no-unused-vars
+/******/ 		if(!hotAvailableFilesMap[chunkId] || !hotRequestedFilesMap[chunkId])
+/******/ 			return;
+/******/ 		hotRequestedFilesMap[chunkId] = false;
+/******/ 		for(var moduleId in moreModules) {
+/******/ 			if(Object.prototype.hasOwnProperty.call(moreModules, moduleId)) {
+/******/ 				hotUpdate[moduleId] = moreModules[moduleId];
+/******/ 			}
+/******/ 		}
+/******/ 		if(--hotWaitingFiles === 0 && hotChunksLoading === 0) {
+/******/ 			hotUpdateDownloaded();
+/******/ 		}
+/******/ 	}
+/******/ 	
+/******/ 	function hotEnsureUpdateChunk(chunkId) {
+/******/ 		if(!hotAvailableFilesMap[chunkId]) {
+/******/ 			hotWaitingFilesMap[chunkId] = true;
+/******/ 		} else {
+/******/ 			hotRequestedFilesMap[chunkId] = true;
+/******/ 			hotWaitingFiles++;
+/******/ 			hotDownloadUpdateChunk(chunkId);
+/******/ 		}
+/******/ 	}
+/******/ 	
+/******/ 	function hotUpdateDownloaded() {
+/******/ 		hotSetStatus("ready");
+/******/ 		var deferred = hotDeferred;
+/******/ 		hotDeferred = null;
+/******/ 		if(!deferred) return;
+/******/ 		if(hotApplyOnUpdate) {
+/******/ 			// Wrap deferred object in Promise to mark it as a well-handled Promise to
+/******/ 			// avoid triggering uncaught exception warning in Chrome.
+/******/ 			// See https://bugs.chromium.org/p/chromium/issues/detail?id=465666
+/******/ 			Promise.resolve().then(function() {
+/******/ 				return hotApply(hotApplyOnUpdate);
+/******/ 			}).then(
+/******/ 				function(result) {
+/******/ 					deferred.resolve(result);
+/******/ 				},
+/******/ 				function(err) {
+/******/ 					deferred.reject(err);
+/******/ 				}
+/******/ 			);
+/******/ 		} else {
+/******/ 			var outdatedModules = [];
+/******/ 			for(var id in hotUpdate) {
+/******/ 				if(Object.prototype.hasOwnProperty.call(hotUpdate, id)) {
+/******/ 					outdatedModules.push(toModuleId(id));
+/******/ 				}
+/******/ 			}
+/******/ 			deferred.resolve(outdatedModules);
+/******/ 		}
+/******/ 	}
+/******/ 	
+/******/ 	function hotApply(options) {
+/******/ 		if(hotStatus !== "ready") throw new Error("apply() is only allowed in ready status");
+/******/ 		options = options || {};
+/******/ 	
+/******/ 		var cb;
+/******/ 		var i;
+/******/ 		var j;
+/******/ 		var module;
+/******/ 		var moduleId;
+/******/ 	
+/******/ 		function getAffectedStuff(updateModuleId) {
+/******/ 			var outdatedModules = [updateModuleId];
+/******/ 			var outdatedDependencies = {};
+/******/ 	
+/******/ 			var queue = outdatedModules.slice().map(function(id) {
+/******/ 				return {
+/******/ 					chain: [id],
+/******/ 					id: id
+/******/ 				};
+/******/ 			});
+/******/ 			while(queue.length > 0) {
+/******/ 				var queueItem = queue.pop();
+/******/ 				var moduleId = queueItem.id;
+/******/ 				var chain = queueItem.chain;
+/******/ 				module = installedModules[moduleId];
+/******/ 				if(!module || module.hot._selfAccepted)
+/******/ 					continue;
+/******/ 				if(module.hot._selfDeclined) {
+/******/ 					return {
+/******/ 						type: "self-declined",
+/******/ 						chain: chain,
+/******/ 						moduleId: moduleId
+/******/ 					};
+/******/ 				}
+/******/ 				if(module.hot._main) {
+/******/ 					return {
+/******/ 						type: "unaccepted",
+/******/ 						chain: chain,
+/******/ 						moduleId: moduleId
+/******/ 					};
+/******/ 				}
+/******/ 				for(var i = 0; i < module.parents.length; i++) {
+/******/ 					var parentId = module.parents[i];
+/******/ 					var parent = installedModules[parentId];
+/******/ 					if(!parent) continue;
+/******/ 					if(parent.hot._declinedDependencies[moduleId]) {
+/******/ 						return {
+/******/ 							type: "declined",
+/******/ 							chain: chain.concat([parentId]),
+/******/ 							moduleId: moduleId,
+/******/ 							parentId: parentId
+/******/ 						};
+/******/ 					}
+/******/ 					if(outdatedModules.indexOf(parentId) >= 0) continue;
+/******/ 					if(parent.hot._acceptedDependencies[moduleId]) {
+/******/ 						if(!outdatedDependencies[parentId])
+/******/ 							outdatedDependencies[parentId] = [];
+/******/ 						addAllToSet(outdatedDependencies[parentId], [moduleId]);
+/******/ 						continue;
+/******/ 					}
+/******/ 					delete outdatedDependencies[parentId];
+/******/ 					outdatedModules.push(parentId);
+/******/ 					queue.push({
+/******/ 						chain: chain.concat([parentId]),
+/******/ 						id: parentId
+/******/ 					});
+/******/ 				}
+/******/ 			}
+/******/ 	
+/******/ 			return {
+/******/ 				type: "accepted",
+/******/ 				moduleId: updateModuleId,
+/******/ 				outdatedModules: outdatedModules,
+/******/ 				outdatedDependencies: outdatedDependencies
+/******/ 			};
+/******/ 		}
+/******/ 	
+/******/ 		function addAllToSet(a, b) {
+/******/ 			for(var i = 0; i < b.length; i++) {
+/******/ 				var item = b[i];
+/******/ 				if(a.indexOf(item) < 0)
+/******/ 					a.push(item);
+/******/ 			}
+/******/ 		}
+/******/ 	
+/******/ 		// at begin all updates modules are outdated
+/******/ 		// the "outdated" status can propagate to parents if they don't accept the children
+/******/ 		var outdatedDependencies = {};
+/******/ 		var outdatedModules = [];
+/******/ 		var appliedUpdate = {};
+/******/ 	
+/******/ 		var warnUnexpectedRequire = function warnUnexpectedRequire() {
+/******/ 			console.warn("[HMR] unexpected require(" + result.moduleId + ") to disposed module");
+/******/ 		};
+/******/ 	
+/******/ 		for(var id in hotUpdate) {
+/******/ 			if(Object.prototype.hasOwnProperty.call(hotUpdate, id)) {
+/******/ 				moduleId = toModuleId(id);
+/******/ 				var result;
+/******/ 				if(hotUpdate[id]) {
+/******/ 					result = getAffectedStuff(moduleId);
+/******/ 				} else {
+/******/ 					result = {
+/******/ 						type: "disposed",
+/******/ 						moduleId: id
+/******/ 					};
+/******/ 				}
+/******/ 				var abortError = false;
+/******/ 				var doApply = false;
+/******/ 				var doDispose = false;
+/******/ 				var chainInfo = "";
+/******/ 				if(result.chain) {
+/******/ 					chainInfo = "\nUpdate propagation: " + result.chain.join(" -> ");
+/******/ 				}
+/******/ 				switch(result.type) {
+/******/ 					case "self-declined":
+/******/ 						if(options.onDeclined)
+/******/ 							options.onDeclined(result);
+/******/ 						if(!options.ignoreDeclined)
+/******/ 							abortError = new Error("Aborted because of self decline: " + result.moduleId + chainInfo);
+/******/ 						break;
+/******/ 					case "declined":
+/******/ 						if(options.onDeclined)
+/******/ 							options.onDeclined(result);
+/******/ 						if(!options.ignoreDeclined)
+/******/ 							abortError = new Error("Aborted because of declined dependency: " + result.moduleId + " in " + result.parentId + chainInfo);
+/******/ 						break;
+/******/ 					case "unaccepted":
+/******/ 						if(options.onUnaccepted)
+/******/ 							options.onUnaccepted(result);
+/******/ 						if(!options.ignoreUnaccepted)
+/******/ 							abortError = new Error("Aborted because " + moduleId + " is not accepted" + chainInfo);
+/******/ 						break;
+/******/ 					case "accepted":
+/******/ 						if(options.onAccepted)
+/******/ 							options.onAccepted(result);
+/******/ 						doApply = true;
+/******/ 						break;
+/******/ 					case "disposed":
+/******/ 						if(options.onDisposed)
+/******/ 							options.onDisposed(result);
+/******/ 						doDispose = true;
+/******/ 						break;
+/******/ 					default:
+/******/ 						throw new Error("Unexception type " + result.type);
+/******/ 				}
+/******/ 				if(abortError) {
+/******/ 					hotSetStatus("abort");
+/******/ 					return Promise.reject(abortError);
+/******/ 				}
+/******/ 				if(doApply) {
+/******/ 					appliedUpdate[moduleId] = hotUpdate[moduleId];
+/******/ 					addAllToSet(outdatedModules, result.outdatedModules);
+/******/ 					for(moduleId in result.outdatedDependencies) {
+/******/ 						if(Object.prototype.hasOwnProperty.call(result.outdatedDependencies, moduleId)) {
+/******/ 							if(!outdatedDependencies[moduleId])
+/******/ 								outdatedDependencies[moduleId] = [];
+/******/ 							addAllToSet(outdatedDependencies[moduleId], result.outdatedDependencies[moduleId]);
+/******/ 						}
+/******/ 					}
+/******/ 				}
+/******/ 				if(doDispose) {
+/******/ 					addAllToSet(outdatedModules, [result.moduleId]);
+/******/ 					appliedUpdate[moduleId] = warnUnexpectedRequire;
+/******/ 				}
+/******/ 			}
+/******/ 		}
+/******/ 	
+/******/ 		// Store self accepted outdated modules to require them later by the module system
+/******/ 		var outdatedSelfAcceptedModules = [];
+/******/ 		for(i = 0; i < outdatedModules.length; i++) {
+/******/ 			moduleId = outdatedModules[i];
+/******/ 			if(installedModules[moduleId] && installedModules[moduleId].hot._selfAccepted)
+/******/ 				outdatedSelfAcceptedModules.push({
+/******/ 					module: moduleId,
+/******/ 					errorHandler: installedModules[moduleId].hot._selfAccepted
+/******/ 				});
+/******/ 		}
+/******/ 	
+/******/ 		// Now in "dispose" phase
+/******/ 		hotSetStatus("dispose");
+/******/ 		Object.keys(hotAvailableFilesMap).forEach(function(chunkId) {
+/******/ 			if(hotAvailableFilesMap[chunkId] === false) {
+/******/ 				hotDisposeChunk(chunkId);
+/******/ 			}
+/******/ 		});
+/******/ 	
+/******/ 		var idx;
+/******/ 		var queue = outdatedModules.slice();
+/******/ 		while(queue.length > 0) {
+/******/ 			moduleId = queue.pop();
+/******/ 			module = installedModules[moduleId];
+/******/ 			if(!module) continue;
+/******/ 	
+/******/ 			var data = {};
+/******/ 	
+/******/ 			// Call dispose handlers
+/******/ 			var disposeHandlers = module.hot._disposeHandlers;
+/******/ 			for(j = 0; j < disposeHandlers.length; j++) {
+/******/ 				cb = disposeHandlers[j];
+/******/ 				cb(data);
+/******/ 			}
+/******/ 			hotCurrentModuleData[moduleId] = data;
+/******/ 	
+/******/ 			// disable module (this disables requires from this module)
+/******/ 			module.hot.active = false;
+/******/ 	
+/******/ 			// remove module from cache
+/******/ 			delete installedModules[moduleId];
+/******/ 	
+/******/ 			// remove "parents" references from all children
+/******/ 			for(j = 0; j < module.children.length; j++) {
+/******/ 				var child = installedModules[module.children[j]];
+/******/ 				if(!child) continue;
+/******/ 				idx = child.parents.indexOf(moduleId);
+/******/ 				if(idx >= 0) {
+/******/ 					child.parents.splice(idx, 1);
+/******/ 				}
+/******/ 			}
+/******/ 		}
+/******/ 	
+/******/ 		// remove outdated dependency from module children
+/******/ 		var dependency;
+/******/ 		var moduleOutdatedDependencies;
+/******/ 		for(moduleId in outdatedDependencies) {
+/******/ 			if(Object.prototype.hasOwnProperty.call(outdatedDependencies, moduleId)) {
+/******/ 				module = installedModules[moduleId];
+/******/ 				if(module) {
+/******/ 					moduleOutdatedDependencies = outdatedDependencies[moduleId];
+/******/ 					for(j = 0; j < moduleOutdatedDependencies.length; j++) {
+/******/ 						dependency = moduleOutdatedDependencies[j];
+/******/ 						idx = module.children.indexOf(dependency);
+/******/ 						if(idx >= 0) module.children.splice(idx, 1);
+/******/ 					}
+/******/ 				}
+/******/ 			}
+/******/ 		}
+/******/ 	
+/******/ 		// Not in "apply" phase
+/******/ 		hotSetStatus("apply");
+/******/ 	
+/******/ 		hotCurrentHash = hotUpdateNewHash;
+/******/ 	
+/******/ 		// insert new code
+/******/ 		for(moduleId in appliedUpdate) {
+/******/ 			if(Object.prototype.hasOwnProperty.call(appliedUpdate, moduleId)) {
+/******/ 				modules[moduleId] = appliedUpdate[moduleId];
+/******/ 			}
+/******/ 		}
+/******/ 	
+/******/ 		// call accept handlers
+/******/ 		var error = null;
+/******/ 		for(moduleId in outdatedDependencies) {
+/******/ 			if(Object.prototype.hasOwnProperty.call(outdatedDependencies, moduleId)) {
+/******/ 				module = installedModules[moduleId];
+/******/ 				moduleOutdatedDependencies = outdatedDependencies[moduleId];
+/******/ 				var callbacks = [];
+/******/ 				for(i = 0; i < moduleOutdatedDependencies.length; i++) {
+/******/ 					dependency = moduleOutdatedDependencies[i];
+/******/ 					cb = module.hot._acceptedDependencies[dependency];
+/******/ 					if(callbacks.indexOf(cb) >= 0) continue;
+/******/ 					callbacks.push(cb);
+/******/ 				}
+/******/ 				for(i = 0; i < callbacks.length; i++) {
+/******/ 					cb = callbacks[i];
+/******/ 					try {
+/******/ 						cb(moduleOutdatedDependencies);
+/******/ 					} catch(err) {
+/******/ 						if(options.onErrored) {
+/******/ 							options.onErrored({
+/******/ 								type: "accept-errored",
+/******/ 								moduleId: moduleId,
+/******/ 								dependencyId: moduleOutdatedDependencies[i],
+/******/ 								error: err
+/******/ 							});
+/******/ 						}
+/******/ 						if(!options.ignoreErrored) {
+/******/ 							if(!error)
+/******/ 								error = err;
+/******/ 						}
+/******/ 					}
+/******/ 				}
+/******/ 			}
+/******/ 		}
+/******/ 	
+/******/ 		// Load self accepted modules
+/******/ 		for(i = 0; i < outdatedSelfAcceptedModules.length; i++) {
+/******/ 			var item = outdatedSelfAcceptedModules[i];
+/******/ 			moduleId = item.module;
+/******/ 			hotCurrentParents = [moduleId];
+/******/ 			try {
+/******/ 				__webpack_require__(moduleId);
+/******/ 			} catch(err) {
+/******/ 				if(typeof item.errorHandler === "function") {
+/******/ 					try {
+/******/ 						item.errorHandler(err);
+/******/ 					} catch(err2) {
+/******/ 						if(options.onErrored) {
+/******/ 							options.onErrored({
+/******/ 								type: "self-accept-error-handler-errored",
+/******/ 								moduleId: moduleId,
+/******/ 								error: err2,
+/******/ 								orginalError: err
+/******/ 							});
+/******/ 						}
+/******/ 						if(!options.ignoreErrored) {
+/******/ 							if(!error)
+/******/ 								error = err2;
+/******/ 						}
+/******/ 						if(!error)
+/******/ 							error = err;
+/******/ 					}
+/******/ 				} else {
+/******/ 					if(options.onErrored) {
+/******/ 						options.onErrored({
+/******/ 							type: "self-accept-errored",
+/******/ 							moduleId: moduleId,
+/******/ 							error: err
+/******/ 						});
+/******/ 					}
+/******/ 					if(!options.ignoreErrored) {
+/******/ 						if(!error)
+/******/ 							error = err;
+/******/ 					}
+/******/ 				}
+/******/ 			}
+/******/ 		}
+/******/ 	
+/******/ 		// handle errors in accept handlers and self accepted module load
+/******/ 		if(error) {
+/******/ 			hotSetStatus("fail");
+/******/ 			return Promise.reject(error);
+/******/ 		}
+/******/ 	
+/******/ 		hotSetStatus("idle");
+/******/ 		return new Promise(function(resolve) {
+/******/ 			resolve(outdatedModules);
+/******/ 		});
+/******/ 	}
+/******/
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
 /******/
@@ -13,11 +620,14 @@
 /******/ 		var module = installedModules[moduleId] = {
 /******/ 			i: moduleId,
 /******/ 			l: false,
-/******/ 			exports: {}
+/******/ 			exports: {},
+/******/ 			hot: hotCreateModule(moduleId),
+/******/ 			parents: (hotCurrentParentsTemp = hotCurrentParents, hotCurrentParents = [], hotCurrentParentsTemp),
+/******/ 			children: []
 /******/ 		};
 /******/
 /******/ 		// Execute the module function
-/******/ 		modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
+/******/ 		modules[moduleId].call(module.exports, module, module.exports, hotCreateRequire(moduleId));
 /******/
 /******/ 		// Flag the module as loaded
 /******/ 		module.l = true;
@@ -57,10 +667,13 @@
 /******/ 	__webpack_require__.o = function(object, property) { return Object.prototype.hasOwnProperty.call(object, property); };
 /******/
 /******/ 	// __webpack_public_path__
-/******/ 	__webpack_require__.p = "/";
+/******/ 	__webpack_require__.p = "http://localhost:3001/";
+/******/
+/******/ 	// __webpack_hash__
+/******/ 	__webpack_require__.h = function() { return hotCurrentHash; };
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 0);
+/******/ 	return hotCreateRequire(0)(__webpack_require__.s = 0);
 /******/ })
 /************************************************************************/
 /******/ ({
@@ -68,7 +681,7 @@
 /***/ "./build/assets.json":
 /***/ (function(module, exports) {
 
-module.exports = {"client":{"js":"/static/js/bundle.1826d222.js","css":"/static/css/client.17750c89.css"}}
+module.exports = {"client":{"js":"http://localhost:3001/static/js/bundle.js"}}
 
 /***/ }),
 
@@ -152,6 +765,144 @@ function toComment(sourceMap) {
 	return '/*# ' + data + ' */';
 }
 
+
+/***/ }),
+
+/***/ "./node_modules/razzle/node_modules/webpack/hot/log-apply-result.js":
+/***/ (function(module, exports, __webpack_require__) {
+
+/*
+	MIT License http://www.opensource.org/licenses/mit-license.php
+	Author Tobias Koppers @sokra
+*/
+module.exports = function(updatedModules, renewedModules) {
+	var unacceptedModules = updatedModules.filter(function(moduleId) {
+		return renewedModules && renewedModules.indexOf(moduleId) < 0;
+	});
+	var log = __webpack_require__("./node_modules/razzle/node_modules/webpack/hot/log.js");
+
+	if(unacceptedModules.length > 0) {
+		log("warning", "[HMR] The following modules couldn't be hot updated: (They would need a full reload!)");
+		unacceptedModules.forEach(function(moduleId) {
+			log("warning", "[HMR]  - " + moduleId);
+		});
+	}
+
+	if(!renewedModules || renewedModules.length === 0) {
+		log("info", "[HMR] Nothing hot updated.");
+	} else {
+		log("info", "[HMR] Updated modules:");
+		renewedModules.forEach(function(moduleId) {
+			if(typeof moduleId === "string" && moduleId.indexOf("!") !== -1) {
+				var parts = moduleId.split("!");
+				log.groupCollapsed("info", "[HMR]  - " + parts.pop());
+				log("info", "[HMR]  - " + moduleId);
+				log.groupEnd("info");
+			} else {
+				log("info", "[HMR]  - " + moduleId);
+			}
+		});
+		var numberIds = renewedModules.every(function(moduleId) {
+			return typeof moduleId === "number";
+		});
+		if(numberIds)
+			log("info", "[HMR] Consider using the NamedModulesPlugin for module names.");
+	}
+};
+
+
+/***/ }),
+
+/***/ "./node_modules/razzle/node_modules/webpack/hot/log.js":
+/***/ (function(module, exports) {
+
+var logLevel = "info";
+
+function dummy() {}
+
+function shouldLog(level) {
+	var shouldLog = (logLevel === "info" && level === "info") ||
+		(["info", "warning"].indexOf(logLevel) >= 0 && level === "warning") ||
+		(["info", "warning", "error"].indexOf(logLevel) >= 0 && level === "error");
+	return shouldLog;
+}
+
+function logGroup(logFn) {
+	return function(level, msg) {
+		if(shouldLog(level)) {
+			logFn(msg);
+		}
+	};
+}
+
+module.exports = function(level, msg) {
+	if(shouldLog(level)) {
+		if(level === "info") {
+			console.log(msg);
+		} else if(level === "warning") {
+			console.warn(msg);
+		} else if(level === "error") {
+			console.error(msg);
+		}
+	}
+};
+
+var group = console.group || dummy;
+var groupCollapsed = console.groupCollapsed || dummy;
+var groupEnd = console.groupEnd || dummy;
+
+module.exports.group = logGroup(group);
+
+module.exports.groupCollapsed = logGroup(groupCollapsed);
+
+module.exports.groupEnd = logGroup(groupEnd);
+
+module.exports.setLogLevel = function(level) {
+	logLevel = level;
+};
+
+
+/***/ }),
+
+/***/ "./node_modules/razzle/node_modules/webpack/hot/poll.js?300":
+/***/ (function(module, exports, __webpack_require__) {
+
+/* WEBPACK VAR INJECTION */(function(__resourceQuery) {/*
+	MIT License http://www.opensource.org/licenses/mit-license.php
+	Author Tobias Koppers @sokra
+*/
+/*globals __resourceQuery */
+if(true) {
+	var hotPollInterval = +(__resourceQuery.substr(1)) || (10 * 60 * 1000);
+	var log = __webpack_require__("./node_modules/razzle/node_modules/webpack/hot/log.js");
+
+	var checkForUpdate = function checkForUpdate(fromUpdate) {
+		if(module.hot.status() === "idle") {
+			module.hot.check(true).then(function(updatedModules) {
+				if(!updatedModules) {
+					if(fromUpdate) log("info", "[HMR] Update applied.");
+					return;
+				}
+				__webpack_require__("./node_modules/razzle/node_modules/webpack/hot/log-apply-result.js")(updatedModules, updatedModules);
+				checkForUpdate(true);
+			}).catch(function(err) {
+				var status = module.hot.status();
+				if(["abort", "fail"].indexOf(status) >= 0) {
+					log("warning", "[HMR] Cannot apply update.");
+					log("warning", "[HMR] " + err.stack || err.message);
+					log("warning", "[HMR] You need to restart the application!");
+				} else {
+					log("warning", "[HMR] Update failed: " + err.stack || err.message);
+				}
+			});
+		}
+	};
+	setInterval(checkForUpdate, hotPollInterval);
+} else {
+	throw new Error("[HMR] Hot Module Replacement is disabled.");
+}
+
+/* WEBPACK VAR INJECTION */}.call(exports, "?300"))
 
 /***/ }),
 
@@ -242,6 +993,7 @@ function CheckAndFetch() {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__Common_fontawesome_less___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3__Common_fontawesome_less__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_whatwg_fetch__ = __webpack_require__("whatwg-fetch");
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_whatwg_fetch___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_4_whatwg_fetch__);
+var _jsxFileName = '/Users/chenjigeng/Project/web/tttt/src/App.js';
 
 
 
@@ -255,7 +1007,12 @@ if (false) {
 }
 
 var App = function App() {
-  return __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_1__router__["a" /* Router */], null);
+  return __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_1__router__["a" /* Router */], {
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 15
+    }
+  });
 };
 
 /* harmony default export */ __webpack_exports__["a"] = (App);
@@ -322,6 +1079,7 @@ module.exports = __webpack_require__.p + "static/media/fa-solid-900.0ab54153.wof
 
 
 
+var _jsxFileName = '/Users/chenjigeng/Project/web/tttt/src/Component/CheckListItem.js';
 
 
 
@@ -387,7 +1145,11 @@ var CheckListItem = function (_React$Component) {
           className: 'check-list-item',
           checked: checked,
           onChange: this.onChange,
-          attributes: attributes
+          attributes: attributes,
+          __source: {
+            fileName: _jsxFileName,
+            lineNumber: 35
+          }
         },
         children
       );
@@ -405,8 +1167,12 @@ var CheckListItem = function (_React$Component) {
 "use strict";
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return CodeBlock; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return CodeBlockLine; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_react__ = __webpack_require__("react");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_react___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_react__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_babel_runtime_helpers_extends__ = __webpack_require__("babel-runtime/helpers/extends");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_babel_runtime_helpers_extends___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_babel_runtime_helpers_extends__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_react__ = __webpack_require__("react");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_react___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_react__);
+
+var _jsxFileName = '/Users/chenjigeng/Project/web/tttt/src/Component/CodeBlock/index.js';
 
 // import '../../vendor/highlight/highlight.pack';
 // import hljs from 'highlight.js';
@@ -433,40 +1199,74 @@ function CodeBlock(props) {
     });
   }
 
-  return __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+  return __WEBPACK_IMPORTED_MODULE_1_react___default.a.createElement(
     'div',
-    { style: { position: 'relative' } },
-    __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+    { style: { position: 'relative' }, __source: {
+        fileName: _jsxFileName,
+        lineNumber: 22
+      }
+    },
+    __WEBPACK_IMPORTED_MODULE_1_react___default.a.createElement(
       'pre',
-      null,
-      __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+      {
+        __source: {
+          fileName: _jsxFileName,
+          lineNumber: 23
+        }
+      },
+      __WEBPACK_IMPORTED_MODULE_1_react___default.a.createElement(
         'code',
-        props.attributes,
+        __WEBPACK_IMPORTED_MODULE_0_babel_runtime_helpers_extends___default()({}, props.attributes, {
+          __source: {
+            fileName: _jsxFileName,
+            lineNumber: 24
+          }
+        }),
         props.children
       )
     ),
-    __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+    __WEBPACK_IMPORTED_MODULE_1_react___default.a.createElement(
       'div',
       {
         contentEditable: false,
-        style: { position: 'absolute', top: '5px', right: '5px' }
+        style: { position: 'absolute', top: '5px', right: '5px' },
+        __source: {
+          fileName: _jsxFileName,
+          lineNumber: 26
+        }
       },
-      __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+      __WEBPACK_IMPORTED_MODULE_1_react___default.a.createElement(
         'select',
-        { value: language, onChange: onChange },
-        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+        { value: language, onChange: onChange, __source: {
+            fileName: _jsxFileName,
+            lineNumber: 30
+          }
+        },
+        __WEBPACK_IMPORTED_MODULE_1_react___default.a.createElement(
           'option',
-          { value: 'css' },
+          { value: 'css', __source: {
+              fileName: _jsxFileName,
+              lineNumber: 31
+            }
+          },
           'CSS'
         ),
-        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+        __WEBPACK_IMPORTED_MODULE_1_react___default.a.createElement(
           'option',
-          { value: 'js' },
+          { value: 'js', __source: {
+              fileName: _jsxFileName,
+              lineNumber: 32
+            }
+          },
           'JavaScript'
         ),
-        __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+        __WEBPACK_IMPORTED_MODULE_1_react___default.a.createElement(
           'option',
-          { value: 'html' },
+          { value: 'html', __source: {
+              fileName: _jsxFileName,
+              lineNumber: 33
+            }
+          },
           'HTML'
         )
       )
@@ -475,9 +1275,14 @@ function CodeBlock(props) {
 }
 
 function CodeBlockLine(props) {
-  return __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
+  return __WEBPACK_IMPORTED_MODULE_1_react___default.a.createElement(
     'div',
-    props.attributes,
+    __WEBPACK_IMPORTED_MODULE_0_babel_runtime_helpers_extends___default()({}, props.attributes, {
+      __source: {
+        fileName: _jsxFileName,
+        lineNumber: 42
+      }
+    }),
     props.children
   );
 }
@@ -517,6 +1322,11 @@ function CodeBlockLine(props) {
 
 
 
+var _class,
+    _temp2,
+    _jsxFileName = '/Users/chenjigeng/Project/web/tttt/src/Component/Dialog/LRDialog/LRDialog.js';
+
+
 
 
 // import './LRDialog.less';
@@ -527,7 +1337,7 @@ if (false) {
   require('./LRDialog.less');
 }
 
-var LRDialog = function (_React$Component) {
+var LRDialog = (_temp2 = _class = function (_React$Component) {
   __WEBPACK_IMPORTED_MODULE_5_babel_runtime_helpers_inherits___default()(LRDialog, _React$Component);
 
   function LRDialog() {
@@ -590,41 +1400,79 @@ var LRDialog = function (_React$Component) {
           className: 'login-dialog',
           visible: visible,
           title: 'Sparker\u6587\u6863',
-          onCancel: onCancel
+          onCancel: onCancel,
+          __source: {
+            fileName: _jsxFileName,
+            lineNumber: 65
+          }
         },
         __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(
           __WEBPACK_IMPORTED_MODULE_8__SparkComponent__["c" /* Dialog */].Body,
-          null,
+          {
+            __source: {
+              fileName: _jsxFileName,
+              lineNumber: 71
+            }
+          },
           __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(
             __WEBPACK_IMPORTED_MODULE_8__SparkComponent__["g" /* Tabs */],
             {
               activeKey: activeTabKey,
-              onChange: this.handleCheckoutActiveTabType
+              onChange: this.handleCheckoutActiveTabType,
+              __source: {
+                fileName: _jsxFileName,
+                lineNumber: 72
+              }
             },
             __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(
               __WEBPACK_IMPORTED_MODULE_8__SparkComponent__["g" /* Tabs */].TabPane,
-              { tab: '\u767B\u5F55', key: 'login' },
+              { tab: '\u767B\u5F55', key: 'login', __source: {
+                  fileName: _jsxFileName,
+                  lineNumber: 76
+                }
+              },
               __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_9__LoginContent__["a" /* LoginContent */], {
                 handleCheckoutRegist: this.handleCheckoutRegist,
-                handleFormDataChange: this.handleFormDataChange
+                handleFormDataChange: this.handleFormDataChange,
+                __source: {
+                  fileName: _jsxFileName,
+                  lineNumber: 77
+                }
               })
             ),
             __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(
               __WEBPACK_IMPORTED_MODULE_8__SparkComponent__["g" /* Tabs */].TabPane,
-              { tab: '\u6CE8\u518C', key: 'regist' },
+              { tab: '\u6CE8\u518C', key: 'regist', __source: {
+                  fileName: _jsxFileName,
+                  lineNumber: 82
+                }
+              },
               __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_10__RegistContent__["a" /* RegistContent */], {
                 handleCheckoutRegist: this.handleCheckoutRegist,
-                handleFormDataChange: this.handleFormDataChange
+                handleFormDataChange: this.handleFormDataChange,
+                __source: {
+                  fileName: _jsxFileName,
+                  lineNumber: 83
+                }
               })
             )
           )
         ),
         __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(
           __WEBPACK_IMPORTED_MODULE_8__SparkComponent__["c" /* Dialog */].Footer,
-          null,
+          {
+            __source: {
+              fileName: _jsxFileName,
+              lineNumber: 90
+            }
+          },
           __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(
             __WEBPACK_IMPORTED_MODULE_8__SparkComponent__["a" /* Button */],
-            { type: 'primary', onClick: this.handleLoginOrRegist },
+            { type: 'primary', onClick: this.handleLoginOrRegist, __source: {
+                fileName: _jsxFileName,
+                lineNumber: 91
+              }
+            },
             text
           )
         )
@@ -633,7 +1481,15 @@ var LRDialog = function (_React$Component) {
   }]);
 
   return LRDialog;
-}(__WEBPACK_IMPORTED_MODULE_6_react___default.a.Component);
+}(__WEBPACK_IMPORTED_MODULE_6_react___default.a.Component), _class.propTypes = {
+  visible: __WEBPACK_IMPORTED_MODULE_7_prop_types___default.a.bool.isRequired,
+  isLoading: __WEBPACK_IMPORTED_MODULE_7_prop_types___default.a.bool.isRequired,
+  onCancel: __WEBPACK_IMPORTED_MODULE_7_prop_types___default.a.func.isRequired,
+  login: __WEBPACK_IMPORTED_MODULE_7_prop_types___default.a.func.isRequired,
+  regist: __WEBPACK_IMPORTED_MODULE_7_prop_types___default.a.func.isRequired,
+  activeTabKey: __WEBPACK_IMPORTED_MODULE_7_prop_types___default.a.any.isRequired,
+  changeActiveTabkey: __WEBPACK_IMPORTED_MODULE_7_prop_types___default.a.func.isRequired
+}, _temp2);
 
 /***/ }),
 
@@ -663,10 +1519,15 @@ var LRDialog = function (_React$Component) {
 
 
 
+var _class,
+    _temp,
+    _jsxFileName = '/Users/chenjigeng/Project/web/tttt/src/Component/Dialog/LRDialog/LoginContent.js';
 
 
 
-var LoginContent = function (_React$Component) {
+
+
+var LoginContent = (_temp = _class = function (_React$Component) {
   __WEBPACK_IMPORTED_MODULE_4_babel_runtime_helpers_inherits___default()(LoginContent, _React$Component);
 
   function LoginContent() {
@@ -685,11 +1546,19 @@ var LoginContent = function (_React$Component) {
 
       return __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
         'div',
-        { className: 'login-dialog-body' },
+        { className: 'login-dialog-body', __source: {
+            fileName: _jsxFileName,
+            lineNumber: 17
+          }
+        },
         __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_7__SparkComponent___["d" /* Input */], {
           placeholder: '\u8D26\u53F7',
           onChange: function onChange(e) {
             return handleFormDataChange('loginUsername', e.target.value);
+          },
+          __source: {
+            fileName: _jsxFileName,
+            lineNumber: 18
           }
         }),
         __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_7__SparkComponent___["d" /* Input */], {
@@ -697,15 +1566,27 @@ var LoginContent = function (_React$Component) {
           type: 'password',
           onChange: function onChange(e) {
             return handleFormDataChange('loginPassword', e.target.value);
+          },
+          __source: {
+            fileName: _jsxFileName,
+            lineNumber: 22
           }
         }),
         __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
           'div',
-          { className: 'friendly-tips' },
+          { className: 'friendly-tips', __source: {
+              fileName: _jsxFileName,
+              lineNumber: 27
+            }
+          },
           '\u6CA1\u6709\u8D26\u53F7?',
           __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
             'a',
-            { href: '#', onClick: handleCheckoutRegist },
+            { href: '#', onClick: handleCheckoutRegist, __source: {
+                fileName: _jsxFileName,
+                lineNumber: 29
+              }
+            },
             '\u6CE8\u518C'
           )
         )
@@ -714,7 +1595,10 @@ var LoginContent = function (_React$Component) {
   }]);
 
   return LoginContent;
-}(__WEBPACK_IMPORTED_MODULE_5_react___default.a.Component);
+}(__WEBPACK_IMPORTED_MODULE_5_react___default.a.Component), _class.propTypes = {
+  handleCheckoutRegist: __WEBPACK_IMPORTED_MODULE_6_prop_types___default.a.func.isRequired,
+  handleFormDataChange: __WEBPACK_IMPORTED_MODULE_6_prop_types___default.a.func.isRequired
+}, _temp);
 
 /***/ }),
 
@@ -744,10 +1628,15 @@ var LoginContent = function (_React$Component) {
 
 
 
+var _class,
+    _temp,
+    _jsxFileName = '/Users/chenjigeng/Project/web/tttt/src/Component/Dialog/LRDialog/RegistContent.js';
 
 
 
-var RegistContent = function (_React$Component) {
+
+
+var RegistContent = (_temp = _class = function (_React$Component) {
   __WEBPACK_IMPORTED_MODULE_4_babel_runtime_helpers_inherits___default()(RegistContent, _React$Component);
 
   function RegistContent() {
@@ -764,11 +1653,19 @@ var RegistContent = function (_React$Component) {
 
       return __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
         'div',
-        { className: 'regist-dialog-body' },
+        { className: 'regist-dialog-body', __source: {
+            fileName: _jsxFileName,
+            lineNumber: 17
+          }
+        },
         __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_7__SparkComponent___["d" /* Input */], {
           placeholder: '\u8D26\u53F7',
           onChange: function onChange(e) {
             return handleFormDataChange('registUsername', e.target.value);
+          },
+          __source: {
+            fileName: _jsxFileName,
+            lineNumber: 18
           }
         }),
         __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_7__SparkComponent___["d" /* Input */], {
@@ -776,6 +1673,10 @@ var RegistContent = function (_React$Component) {
           type: 'password',
           onChange: function onChange(e) {
             return handleFormDataChange('registPassword', e.target.value);
+          },
+          __source: {
+            fileName: _jsxFileName,
+            lineNumber: 22
           }
         }),
         __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_7__SparkComponent___["d" /* Input */], {
@@ -783,6 +1684,10 @@ var RegistContent = function (_React$Component) {
           type: 'password',
           onChange: function onChange(e) {
             return handleFormDataChange('confirmRegistPassword', e.target.value);
+          },
+          __source: {
+            fileName: _jsxFileName,
+            lineNumber: 27
           }
         })
       );
@@ -790,7 +1695,10 @@ var RegistContent = function (_React$Component) {
   }]);
 
   return RegistContent;
-}(__WEBPACK_IMPORTED_MODULE_5_react___default.a.Component);
+}(__WEBPACK_IMPORTED_MODULE_5_react___default.a.Component), _class.propTypes = {
+  handleCheckoutRegist: __WEBPACK_IMPORTED_MODULE_6_prop_types___default.a.func.isRequired,
+  handleFormDataChange: __WEBPACK_IMPORTED_MODULE_6_prop_types___default.a.func.isRequired
+}, _temp);
 
 /***/ }),
 
@@ -840,10 +1748,15 @@ var RegistContent = function (_React$Component) {
 
 
 
+var _class,
+    _temp2,
+    _jsxFileName = '/Users/chenjigeng/Project/web/tttt/src/Component/HoverMenu.js';
 
 
 
-var HoverMenu = function (_React$Component) {
+
+
+var HoverMenu = (_temp2 = _class = function (_React$Component) {
   __WEBPACK_IMPORTED_MODULE_4_babel_runtime_helpers_inherits___default()(HoverMenu, _React$Component);
 
   function HoverMenu() {
@@ -884,60 +1797,129 @@ var HoverMenu = function (_React$Component) {
 
       return __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
         'span',
-        { key: type, className: 'button', onMouseDown: onMouseDown, 'data-active': isActive },
-        __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(Icon, null)
+        { key: type, className: 'button', onMouseDown: onMouseDown, 'data-active': isActive, __source: {
+            fileName: _jsxFileName,
+            lineNumber: 40
+          }
+        },
+        __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(Icon, {
+          __source: {
+            fileName: _jsxFileName,
+            lineNumber: 41
+          }
+        })
       );
     }, _this.renderButtons = function () {
       var list = [_this.renderButton('bold', __WEBPACK_IMPORTED_MODULE_7__Icons__["c" /* MdBoldIcon */], __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
         'div',
-        null,
+        {
+          __source: {
+            fileName: _jsxFileName,
+            lineNumber: 49
+          }
+        },
         __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
           'div',
-          null,
+          {
+            __source: {
+              fileName: _jsxFileName,
+              lineNumber: 50
+            }
+          },
           '\u7C97\u4F53'
         ),
         __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
           'div',
-          null,
+          {
+            __source: {
+              fileName: _jsxFileName,
+              lineNumber: 51
+            }
+          },
           '\u2318+B'
         )
       ), true), _this.renderButton('italic', __WEBPACK_IMPORTED_MODULE_7__Icons__["e" /* MdItalicIcon */], __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
         'div',
-        null,
+        {
+          __source: {
+            fileName: _jsxFileName,
+            lineNumber: 55
+          }
+        },
         __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
           'div',
-          null,
+          {
+            __source: {
+              fileName: _jsxFileName,
+              lineNumber: 56
+            }
+          },
           '\u659C\u4F53'
         ),
         __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
           'div',
-          null,
+          {
+            __source: {
+              fileName: _jsxFileName,
+              lineNumber: 57
+            }
+          },
           '\u2318+I'
         )
       ), true), _this.renderButton('strikethrough', __WEBPACK_IMPORTED_MODULE_7__Icons__["g" /* MdStrikethroughIcon */], __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
         'div',
-        null,
+        {
+          __source: {
+            fileName: _jsxFileName,
+            lineNumber: 61
+          }
+        },
         __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
           'div',
-          null,
+          {
+            __source: {
+              fileName: _jsxFileName,
+              lineNumber: 62
+            }
+          },
           '\u4E0B\u5212\u7EBF'
         ),
         __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
           'div',
-          null,
+          {
+            __source: {
+              fileName: _jsxFileName,
+              lineNumber: 63
+            }
+          },
           '\u2318+S'
         )
       ), true), _this.renderButton('underline', __WEBPACK_IMPORTED_MODULE_7__Icons__["h" /* MdUnderlineIcon */], __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
         'div',
-        null,
+        {
+          __source: {
+            fileName: _jsxFileName,
+            lineNumber: 67
+          }
+        },
         __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
           'div',
-          null,
+          {
+            __source: {
+              fileName: _jsxFileName,
+              lineNumber: 68
+            }
+          },
           '\u4E0B\u5212\u7EBF'
         ),
         __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
           'div',
-          null,
+          {
+            __source: {
+              fileName: _jsxFileName,
+              lineNumber: 69
+            }
+          },
           '\u2318+U'
         )
       ), true)];
@@ -971,14 +1953,21 @@ var HoverMenu = function (_React$Component) {
         'div',
         { className: 'menu hover-menu', ref: function ref(menu) {
             return _this2.menu = menu;
-          } },
+          }, __source: {
+            fileName: _jsxFileName,
+            lineNumber: 90
+          }
+        },
         this.renderButtons()
       );
     }
   }]);
 
   return HoverMenu;
-}(__WEBPACK_IMPORTED_MODULE_5_react___default.a.Component);
+}(__WEBPACK_IMPORTED_MODULE_5_react___default.a.Component), _class.propTypes = {
+  onChange: __WEBPACK_IMPORTED_MODULE_6_prop_types___default.a.func.isRequired,
+  value: __WEBPACK_IMPORTED_MODULE_6_prop_types___default.a.object.isRequired
+}, _temp2);
 
 /***/ }),
 
@@ -1056,6 +2045,7 @@ var HoverMenu = function (_React$Component) {
 
 
 
+var _jsxFileName = '/Users/chenjigeng/Project/web/tttt/src/Component/Image/Image.js';
 
 
 // import './Image.less';
@@ -1108,9 +2098,17 @@ var Image = function (_React$Component) {
       var node = this.props.node;
 
       var srcUrl = node.data.get('url');
-      return srcUrl ? __WEBPACK_IMPORTED_MODULE_8_react___default.a.createElement('img', { src: srcUrl, alt: 'preview' }) : __WEBPACK_IMPORTED_MODULE_8_react___default.a.createElement(
+      return srcUrl ? __WEBPACK_IMPORTED_MODULE_8_react___default.a.createElement('img', { src: srcUrl, alt: 'preview', __source: {
+          fileName: _jsxFileName,
+          lineNumber: 37
+        }
+      }) : __WEBPACK_IMPORTED_MODULE_8_react___default.a.createElement(
         'div',
-        { className: 'img-loading' },
+        { className: 'img-loading', __source: {
+            fileName: _jsxFileName,
+            lineNumber: 37
+          }
+        },
         '\u56FE\u7247\u4E0A\u4F20\u4E2D...'
       );
     }
@@ -1196,7 +2194,9 @@ var insertImage = function () {
 
 
 
-var _dec, _class;
+var _dec,
+    _class,
+    _jsxFileName = '/Users/chenjigeng/Project/web/tttt/src/Component/Navbar/Navbar.js';
 
 
 
@@ -1262,15 +2262,28 @@ var Navbar = (_dec = Object(__WEBPACK_IMPORTED_MODULE_9_react_redux__["connect"]
     }, _this.renderUnloginedNavbar = function () {
       return __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
         __WEBPACK_IMPORTED_MODULE_5_react___default.a.Fragment,
-        null,
+        {
+          __source: {
+            fileName: _jsxFileName,
+            lineNumber: 63
+          }
+        },
         __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
           'a',
-          { href: '#', onClick: _this.toggleLoginDialog },
+          { href: '#', onClick: _this.toggleLoginDialog, __source: {
+              fileName: _jsxFileName,
+              lineNumber: 64
+            }
+          },
           '\u767B\u5F55'
         ),
         __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
           'a',
-          { href: '#', onClick: _this.toggleRegistDialog },
+          { href: '#', onClick: _this.toggleRegistDialog, __source: {
+              fileName: _jsxFileName,
+              lineNumber: 65
+            }
+          },
           '\u6CE8\u518C'
         )
       );
@@ -1280,15 +2293,28 @@ var Navbar = (_dec = Object(__WEBPACK_IMPORTED_MODULE_9_react_redux__["connect"]
 
       return __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
         __WEBPACK_IMPORTED_MODULE_5_react___default.a.Fragment,
-        null,
+        {
+          __source: {
+            fileName: _jsxFileName,
+            lineNumber: 74
+          }
+        },
         __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
           'a',
-          { href: '#', onClick: _this.props.logout },
+          { href: '#', onClick: _this.props.logout, __source: {
+              fileName: _jsxFileName,
+              lineNumber: 75
+            }
+          },
           '\u767B\u51FA'
         ),
         __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
           'a',
-          { href: '#' },
+          { href: '#', __source: {
+              fileName: _jsxFileName,
+              lineNumber: 76
+            }
+          },
           userInfo.username
         )
       );
@@ -1319,22 +2345,45 @@ var Navbar = (_dec = Object(__WEBPACK_IMPORTED_MODULE_9_react_redux__["connect"]
 
       return __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
         'div',
-        null,
+        {
+          __source: {
+            fileName: _jsxFileName,
+            lineNumber: 90
+          }
+        },
         __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
           __WEBPACK_IMPORTED_MODULE_6__SparkComponent__["e" /* Nav */],
-          null,
+          {
+            __source: {
+              fileName: _jsxFileName,
+              lineNumber: 91
+            }
+          },
           __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
             __WEBPACK_IMPORTED_MODULE_6__SparkComponent__["e" /* Nav */].title,
-            null,
+            {
+              __source: {
+                fileName: _jsxFileName,
+                lineNumber: 92
+              }
+            },
             __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
               'span',
-              { onClick: this.handleGoToHome },
+              { onClick: this.handleGoToHome, __source: {
+                  fileName: _jsxFileName,
+                  lineNumber: 93
+                }
+              },
               'Sparker\u6587\u6863'
             )
           ),
           __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
             __WEBPACK_IMPORTED_MODULE_6__SparkComponent__["e" /* Nav */].content,
-            { className: 'spark-content' },
+            { className: 'spark-content', __source: {
+                fileName: _jsxFileName,
+                lineNumber: 95
+              }
+            },
             isLogin === true ? this.renderLoginedNavbar() : this.renderUnloginedNavbar()
           )
         ),
@@ -1345,7 +2394,11 @@ var Navbar = (_dec = Object(__WEBPACK_IMPORTED_MODULE_9_react_redux__["connect"]
           onCancel: this.closeLRDialog,
           login: login,
           regist: regist,
-          isLoading: isLoading
+          isLoading: isLoading,
+          __source: {
+            fileName: _jsxFileName,
+            lineNumber: 101
+          }
         })
       );
     }
@@ -1386,40 +2439,48 @@ exports.push([module.i, ".spark-nav__title {\n  cursor: pointer;\n}\n\n.spark-na
 
 "use strict";
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return SparkerEditor; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_babel_runtime_core_js_object_get_prototype_of__ = __webpack_require__("babel-runtime/core-js/object/get-prototype-of");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_babel_runtime_core_js_object_get_prototype_of___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_babel_runtime_core_js_object_get_prototype_of__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_babel_runtime_helpers_classCallCheck__ = __webpack_require__("babel-runtime/helpers/classCallCheck");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_babel_runtime_helpers_classCallCheck___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_babel_runtime_helpers_classCallCheck__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_babel_runtime_helpers_createClass__ = __webpack_require__("babel-runtime/helpers/createClass");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_babel_runtime_helpers_createClass___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_babel_runtime_helpers_createClass__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_babel_runtime_helpers_possibleConstructorReturn__ = __webpack_require__("babel-runtime/helpers/possibleConstructorReturn");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_babel_runtime_helpers_possibleConstructorReturn___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_babel_runtime_helpers_possibleConstructorReturn__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_babel_runtime_helpers_inherits__ = __webpack_require__("babel-runtime/helpers/inherits");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_babel_runtime_helpers_inherits___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_4_babel_runtime_helpers_inherits__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_slate_react__ = __webpack_require__("slate-react");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_slate_react___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_5_slate_react__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_prop_types__ = __webpack_require__("prop-types");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_prop_types___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_6_prop_types__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__CodeBlock__ = __webpack_require__("./src/Component/CodeBlock/index.js");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8_slate__ = __webpack_require__("slate");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8_slate___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_8_slate__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9_slate_paste_linkify__ = __webpack_require__("slate-paste-linkify");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9_slate_paste_linkify___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_9_slate_paste_linkify__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10_slate_drop_or_paste_images__ = __webpack_require__("slate-drop-or-paste-images");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10_slate_drop_or_paste_images___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_10_slate_drop_or_paste_images__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_11_slate_prism__ = __webpack_require__("slate-prism");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_11_slate_prism___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_11_slate_prism__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_12_react__ = __webpack_require__("react");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_12_react___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_12_react__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_13____ = __webpack_require__("./src/Component/index.js");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_14__utils__ = __webpack_require__("./src/utils/index.js");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_15__featurePlugins__ = __webpack_require__("./src/Component/SparkerEditor/featurePlugins/index.js");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_16__Socket__ = __webpack_require__("./src/Socket/index.js");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_17__Toolbar__ = __webpack_require__("./src/Component/Toolbar.js");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_babel_runtime_helpers_extends__ = __webpack_require__("babel-runtime/helpers/extends");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_babel_runtime_helpers_extends___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_babel_runtime_helpers_extends__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_babel_runtime_core_js_object_get_prototype_of__ = __webpack_require__("babel-runtime/core-js/object/get-prototype-of");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_babel_runtime_core_js_object_get_prototype_of___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_babel_runtime_core_js_object_get_prototype_of__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_babel_runtime_helpers_classCallCheck__ = __webpack_require__("babel-runtime/helpers/classCallCheck");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_babel_runtime_helpers_classCallCheck___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_babel_runtime_helpers_classCallCheck__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_babel_runtime_helpers_createClass__ = __webpack_require__("babel-runtime/helpers/createClass");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_babel_runtime_helpers_createClass___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_babel_runtime_helpers_createClass__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_babel_runtime_helpers_possibleConstructorReturn__ = __webpack_require__("babel-runtime/helpers/possibleConstructorReturn");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_babel_runtime_helpers_possibleConstructorReturn___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_4_babel_runtime_helpers_possibleConstructorReturn__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_babel_runtime_helpers_inherits__ = __webpack_require__("babel-runtime/helpers/inherits");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_babel_runtime_helpers_inherits___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_5_babel_runtime_helpers_inherits__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_slate_react__ = __webpack_require__("slate-react");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_slate_react___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_6_slate_react__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_prop_types__ = __webpack_require__("prop-types");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_prop_types___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_7_prop_types__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__CodeBlock__ = __webpack_require__("./src/Component/CodeBlock/index.js");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9_slate__ = __webpack_require__("slate");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9_slate___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_9_slate__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10_slate_paste_linkify__ = __webpack_require__("slate-paste-linkify");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10_slate_paste_linkify___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_10_slate_paste_linkify__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_11_slate_drop_or_paste_images__ = __webpack_require__("slate-drop-or-paste-images");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_11_slate_drop_or_paste_images___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_11_slate_drop_or_paste_images__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_12_slate_prism__ = __webpack_require__("slate-prism");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_12_slate_prism___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_12_slate_prism__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_13_react__ = __webpack_require__("react");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_13_react___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_13_react__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_14____ = __webpack_require__("./src/Component/index.js");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_15__utils__ = __webpack_require__("./src/utils/index.js");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_16__featurePlugins__ = __webpack_require__("./src/Component/SparkerEditor/featurePlugins/index.js");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_17__Socket__ = __webpack_require__("./src/Socket/index.js");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_18__Toolbar__ = __webpack_require__("./src/Component/Toolbar.js");
 
 
 
 
+
+
+
+var _class,
+    _temp,
+    _jsxFileName = '/Users/chenjigeng/Project/web/tttt/src/Component/SparkerEditor/SparkerEditor.js';
 
 
 
@@ -1442,14 +2503,14 @@ if (false) {
 // import './markdown.less';
 
 
-var plugins = [__WEBPACK_IMPORTED_MODULE_11_slate_prism___default()({
+var plugins = [__WEBPACK_IMPORTED_MODULE_12_slate_prism___default()({
   onlyIn: function onlyIn(node) {
     return node.type === 'code';
   },
   getSyntax: function getSyntax(node) {
     return node.data.get('language');
   }
-}), Object(__WEBPACK_IMPORTED_MODULE_14__utils__["a" /* BlockHotkey */])({ key: 'o', type: 'order-list' }), Object(__WEBPACK_IMPORTED_MODULE_14__utils__["a" /* BlockHotkey */])({ key: 'u', type: 'unorder-list' }), Object(__WEBPACK_IMPORTED_MODULE_14__utils__["a" /* BlockHotkey */])({ key: 'c', type: 'check-list-item' }), __WEBPACK_IMPORTED_MODULE_15__featurePlugins__["a" /* CheckListPlugins */], Object(__WEBPACK_IMPORTED_MODULE_15__featurePlugins__["b" /* MarkdownPlugins */])(), __WEBPACK_IMPORTED_MODULE_9_slate_paste_linkify___default()({ type: 'link' }), __WEBPACK_IMPORTED_MODULE_10_slate_drop_or_paste_images___default()({
+}), Object(__WEBPACK_IMPORTED_MODULE_15__utils__["a" /* BlockHotkey */])({ key: 'o', type: 'order-list' }), Object(__WEBPACK_IMPORTED_MODULE_15__utils__["a" /* BlockHotkey */])({ key: 'u', type: 'unorder-list' }), Object(__WEBPACK_IMPORTED_MODULE_15__utils__["a" /* BlockHotkey */])({ key: 'c', type: 'check-list-item' }), __WEBPACK_IMPORTED_MODULE_16__featurePlugins__["a" /* CheckListPlugins */], Object(__WEBPACK_IMPORTED_MODULE_16__featurePlugins__["b" /* MarkdownPlugins */])(), __WEBPACK_IMPORTED_MODULE_10_slate_paste_linkify___default()({ type: 'link' }), __WEBPACK_IMPORTED_MODULE_11_slate_drop_or_paste_images___default()({
   insertImage: function insertImage(transform, file) {
 
     return transform.insertBlock({
@@ -1458,17 +2519,17 @@ var plugins = [__WEBPACK_IMPORTED_MODULE_11_slate_prism___default()({
       data: { file: file }
     });
   }
-}), Object(__WEBPACK_IMPORTED_MODULE_14__utils__["b" /* MarkHotkey */])({ key: 'b', type: 'bold' }), Object(__WEBPACK_IMPORTED_MODULE_14__utils__["b" /* MarkHotkey */])({ key: 'i', type: 'italic' }), Object(__WEBPACK_IMPORTED_MODULE_14__utils__["b" /* MarkHotkey */])({ key: 's', type: 'strikethrough' }), Object(__WEBPACK_IMPORTED_MODULE_14__utils__["b" /* MarkHotkey */])({ key: 'u', type: 'underline' })];
+}), Object(__WEBPACK_IMPORTED_MODULE_15__utils__["b" /* MarkHotkey */])({ key: 'b', type: 'bold' }), Object(__WEBPACK_IMPORTED_MODULE_15__utils__["b" /* MarkHotkey */])({ key: 'i', type: 'italic' }), Object(__WEBPACK_IMPORTED_MODULE_15__utils__["b" /* MarkHotkey */])({ key: 's', type: 'strikethrough' }), Object(__WEBPACK_IMPORTED_MODULE_15__utils__["b" /* MarkHotkey */])({ key: 'u', type: 'underline' })];
 
-var initialValue = __WEBPACK_IMPORTED_MODULE_8_slate__["Value"].fromJSON({});
+var initialValue = __WEBPACK_IMPORTED_MODULE_9_slate__["Value"].fromJSON({});
 
-var SparkerEditor = function (_React$Component) {
-  __WEBPACK_IMPORTED_MODULE_4_babel_runtime_helpers_inherits___default()(SparkerEditor, _React$Component);
+var SparkerEditor = (_temp = _class = function (_React$Component) {
+  __WEBPACK_IMPORTED_MODULE_5_babel_runtime_helpers_inherits___default()(SparkerEditor, _React$Component);
 
   function SparkerEditor() {
-    __WEBPACK_IMPORTED_MODULE_1_babel_runtime_helpers_classCallCheck___default()(this, SparkerEditor);
+    __WEBPACK_IMPORTED_MODULE_2_babel_runtime_helpers_classCallCheck___default()(this, SparkerEditor);
 
-    var _this = __WEBPACK_IMPORTED_MODULE_3_babel_runtime_helpers_possibleConstructorReturn___default()(this, (SparkerEditor.__proto__ || __WEBPACK_IMPORTED_MODULE_0_babel_runtime_core_js_object_get_prototype_of___default()(SparkerEditor)).call(this));
+    var _this = __WEBPACK_IMPORTED_MODULE_4_babel_runtime_helpers_possibleConstructorReturn___default()(this, (SparkerEditor.__proto__ || __WEBPACK_IMPORTED_MODULE_1_babel_runtime_core_js_object_get_prototype_of___default()(SparkerEditor)).call(this));
 
     _this.state = {
       value: initialValue
@@ -1477,7 +2538,7 @@ var SparkerEditor = function (_React$Component) {
     _this.initSocketEvent = function () {
       var match = _this.props.match;
 
-      _this.socket = Object(__WEBPACK_IMPORTED_MODULE_16__Socket__["a" /* socketInit */])();
+      _this.socket = Object(__WEBPACK_IMPORTED_MODULE_17__Socket__["a" /* socketInit */])();
       _this.socket.emit('initSocket', {
         docId: match.params.docId
       });
@@ -1486,7 +2547,7 @@ var SparkerEditor = function (_React$Component) {
       });
       _this.socket.on('init', function (data) {
         _this.setState({
-          value: __WEBPACK_IMPORTED_MODULE_8_slate__["Value"].fromJSON(data.value)
+          value: __WEBPACK_IMPORTED_MODULE_9_slate__["Value"].fromJSON(data.value)
         });
       });
     };
@@ -1531,79 +2592,153 @@ var SparkerEditor = function (_React$Component) {
 
       switch (node.type) {
         case 'image':
-          return __WEBPACK_IMPORTED_MODULE_12_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_13____["c" /* Image */], props);
+          return __WEBPACK_IMPORTED_MODULE_13_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_14____["c" /* Image */], __WEBPACK_IMPORTED_MODULE_0_babel_runtime_helpers_extends___default()({}, props, {
+            __source: {
+              fileName: _jsxFileName,
+              lineNumber: 144
+            }
+          }));
         case 'link':
-          return __WEBPACK_IMPORTED_MODULE_12_react___default.a.createElement(
+          return __WEBPACK_IMPORTED_MODULE_13_react___default.a.createElement(
             'a',
-            { href: node.data.get('href'), target: '_blank' },
+            { href: node.data.get('href'), target: '_blank', __source: {
+                fileName: _jsxFileName,
+                lineNumber: 145
+              }
+            },
             props.children
           );
         case 'block-quote':
-          return __WEBPACK_IMPORTED_MODULE_12_react___default.a.createElement(
+          return __WEBPACK_IMPORTED_MODULE_13_react___default.a.createElement(
             'blockquote',
-            attributes,
+            __WEBPACK_IMPORTED_MODULE_0_babel_runtime_helpers_extends___default()({}, attributes, {
+              __source: {
+                fileName: _jsxFileName,
+                lineNumber: 146
+              }
+            }),
             children
           );
         case 'bulleted-list':
-          return __WEBPACK_IMPORTED_MODULE_12_react___default.a.createElement(
+          return __WEBPACK_IMPORTED_MODULE_13_react___default.a.createElement(
             'ul',
-            attributes,
+            __WEBPACK_IMPORTED_MODULE_0_babel_runtime_helpers_extends___default()({}, attributes, {
+              __source: {
+                fileName: _jsxFileName,
+                lineNumber: 147
+              }
+            }),
             children
           );
         case 'numbered-list':
-          return __WEBPACK_IMPORTED_MODULE_12_react___default.a.createElement(
+          return __WEBPACK_IMPORTED_MODULE_13_react___default.a.createElement(
             'ol',
-            attributes,
+            __WEBPACK_IMPORTED_MODULE_0_babel_runtime_helpers_extends___default()({}, attributes, {
+              __source: {
+                fileName: _jsxFileName,
+                lineNumber: 148
+              }
+            }),
             children
           );
         case 'heading-one':
-          return __WEBPACK_IMPORTED_MODULE_12_react___default.a.createElement(
+          return __WEBPACK_IMPORTED_MODULE_13_react___default.a.createElement(
             'h1',
-            attributes,
+            __WEBPACK_IMPORTED_MODULE_0_babel_runtime_helpers_extends___default()({}, attributes, {
+              __source: {
+                fileName: _jsxFileName,
+                lineNumber: 149
+              }
+            }),
             children
           );
         case 'heading-two':
-          return __WEBPACK_IMPORTED_MODULE_12_react___default.a.createElement(
+          return __WEBPACK_IMPORTED_MODULE_13_react___default.a.createElement(
             'h2',
-            attributes,
+            __WEBPACK_IMPORTED_MODULE_0_babel_runtime_helpers_extends___default()({}, attributes, {
+              __source: {
+                fileName: _jsxFileName,
+                lineNumber: 150
+              }
+            }),
             children
           );
         case 'heading-three':
-          return __WEBPACK_IMPORTED_MODULE_12_react___default.a.createElement(
+          return __WEBPACK_IMPORTED_MODULE_13_react___default.a.createElement(
             'h3',
-            attributes,
+            __WEBPACK_IMPORTED_MODULE_0_babel_runtime_helpers_extends___default()({}, attributes, {
+              __source: {
+                fileName: _jsxFileName,
+                lineNumber: 151
+              }
+            }),
             children
           );
         case 'heading-four':
-          return __WEBPACK_IMPORTED_MODULE_12_react___default.a.createElement(
+          return __WEBPACK_IMPORTED_MODULE_13_react___default.a.createElement(
             'h4',
-            attributes,
+            __WEBPACK_IMPORTED_MODULE_0_babel_runtime_helpers_extends___default()({}, attributes, {
+              __source: {
+                fileName: _jsxFileName,
+                lineNumber: 152
+              }
+            }),
             children
           );
         case 'heading-five':
-          return __WEBPACK_IMPORTED_MODULE_12_react___default.a.createElement(
+          return __WEBPACK_IMPORTED_MODULE_13_react___default.a.createElement(
             'h5',
-            attributes,
+            __WEBPACK_IMPORTED_MODULE_0_babel_runtime_helpers_extends___default()({}, attributes, {
+              __source: {
+                fileName: _jsxFileName,
+                lineNumber: 153
+              }
+            }),
             children
           );
         case 'unorder-list':
-          return __WEBPACK_IMPORTED_MODULE_12_react___default.a.createElement(
+          return __WEBPACK_IMPORTED_MODULE_13_react___default.a.createElement(
             'li',
-            attributes,
+            __WEBPACK_IMPORTED_MODULE_0_babel_runtime_helpers_extends___default()({}, attributes, {
+              __source: {
+                fileName: _jsxFileName,
+                lineNumber: 154
+              }
+            }),
             children
           );
         case 'order-list':
-          return __WEBPACK_IMPORTED_MODULE_12_react___default.a.createElement(
+          return __WEBPACK_IMPORTED_MODULE_13_react___default.a.createElement(
             'li',
-            attributes,
+            __WEBPACK_IMPORTED_MODULE_0_babel_runtime_helpers_extends___default()({}, attributes, {
+              __source: {
+                fileName: _jsxFileName,
+                lineNumber: 155
+              }
+            }),
             children
           );
         case 'code':
-          return __WEBPACK_IMPORTED_MODULE_12_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_7__CodeBlock__["a" /* CodeBlock */], props);
+          return __WEBPACK_IMPORTED_MODULE_13_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_8__CodeBlock__["a" /* CodeBlock */], __WEBPACK_IMPORTED_MODULE_0_babel_runtime_helpers_extends___default()({}, props, {
+            __source: {
+              fileName: _jsxFileName,
+              lineNumber: 156
+            }
+          }));
         case 'code_line':
-          return __WEBPACK_IMPORTED_MODULE_12_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_7__CodeBlock__["b" /* CodeBlockLine */], props);
+          return __WEBPACK_IMPORTED_MODULE_13_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_8__CodeBlock__["b" /* CodeBlockLine */], __WEBPACK_IMPORTED_MODULE_0_babel_runtime_helpers_extends___default()({}, props, {
+            __source: {
+              fileName: _jsxFileName,
+              lineNumber: 157
+            }
+          }));
         case 'check-list-item':
-          return __WEBPACK_IMPORTED_MODULE_12_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_13____["a" /* CheckListItem */], props);
+          return __WEBPACK_IMPORTED_MODULE_13_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_14____["a" /* CheckListItem */], __WEBPACK_IMPORTED_MODULE_0_babel_runtime_helpers_extends___default()({}, props, {
+            __source: {
+              fileName: _jsxFileName,
+              lineNumber: 158
+            }
+          }));
         default:
           return;
       }
@@ -1616,33 +2751,57 @@ var SparkerEditor = function (_React$Component) {
       switch (mark.type) {
         // case 'code': return <code>{props.children}</code>;       
         case 'bold':
-          return __WEBPACK_IMPORTED_MODULE_12_react___default.a.createElement(
+          return __WEBPACK_IMPORTED_MODULE_13_react___default.a.createElement(
             'strong',
-            null,
+            {
+              __source: {
+                fileName: _jsxFileName,
+                lineNumber: 167
+              }
+            },
             props.children
           );
         case 'italic':
-          return __WEBPACK_IMPORTED_MODULE_12_react___default.a.createElement(
+          return __WEBPACK_IMPORTED_MODULE_13_react___default.a.createElement(
             'em',
-            null,
+            {
+              __source: {
+                fileName: _jsxFileName,
+                lineNumber: 168
+              }
+            },
             props.children
           );
         case 'strikethrough':
-          return __WEBPACK_IMPORTED_MODULE_12_react___default.a.createElement(
+          return __WEBPACK_IMPORTED_MODULE_13_react___default.a.createElement(
             'del',
-            null,
+            {
+              __source: {
+                fileName: _jsxFileName,
+                lineNumber: 169
+              }
+            },
             props.children
           );
         case 'underline':
-          return __WEBPACK_IMPORTED_MODULE_12_react___default.a.createElement(
+          return __WEBPACK_IMPORTED_MODULE_13_react___default.a.createElement(
             'u',
-            null,
+            {
+              __source: {
+                fileName: _jsxFileName,
+                lineNumber: 170
+              }
+            },
             props.children
           );
         case 'highlight':
-          return __WEBPACK_IMPORTED_MODULE_12_react___default.a.createElement(
+          return __WEBPACK_IMPORTED_MODULE_13_react___default.a.createElement(
             'span',
-            { className: 'highlight' },
+            { className: 'highlight', __source: {
+                fileName: _jsxFileName,
+                lineNumber: 171
+              }
+            },
             children
           );
         default:
@@ -1654,7 +2813,7 @@ var SparkerEditor = function (_React$Component) {
     return _this;
   }
 
-  __WEBPACK_IMPORTED_MODULE_2_babel_runtime_helpers_createClass___default()(SparkerEditor, [{
+  __WEBPACK_IMPORTED_MODULE_3_babel_runtime_helpers_createClass___default()(SparkerEditor, [{
     key: 'componentDidMount',
     value: function componentDidMount() {
       setInterval(this.clearQueue, 200);
@@ -1663,22 +2822,42 @@ var SparkerEditor = function (_React$Component) {
   }, {
     key: 'render',
     value: function render() {
-      return __WEBPACK_IMPORTED_MODULE_12_react___default.a.createElement(
+      return __WEBPACK_IMPORTED_MODULE_13_react___default.a.createElement(
         'div',
-        { className: 'editor' },
-        __WEBPACK_IMPORTED_MODULE_12_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_17__Toolbar__["a" /* Toolbar */], { onChange: this.onChange, value: this.state.value }),
-        __WEBPACK_IMPORTED_MODULE_12_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_13____["b" /* HoverMenu */], { onChange: this.onChange, value: this.state.value }),
-        __WEBPACK_IMPORTED_MODULE_12_react___default.a.createElement(
+        { className: 'editor', __source: {
+            fileName: _jsxFileName,
+            lineNumber: 123
+          }
+        },
+        __WEBPACK_IMPORTED_MODULE_13_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_18__Toolbar__["a" /* Toolbar */], { onChange: this.onChange, value: this.state.value, __source: {
+            fileName: _jsxFileName,
+            lineNumber: 124
+          }
+        }),
+        __WEBPACK_IMPORTED_MODULE_13_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_14____["b" /* HoverMenu */], { onChange: this.onChange, value: this.state.value, __source: {
+            fileName: _jsxFileName,
+            lineNumber: 125
+          }
+        }),
+        __WEBPACK_IMPORTED_MODULE_13_react___default.a.createElement(
           'div',
-          { className: 'editor-container' },
-          __WEBPACK_IMPORTED_MODULE_12_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_5_slate_react__["Editor"], {
+          { className: 'editor-container', __source: {
+              fileName: _jsxFileName,
+              lineNumber: 126
+            }
+          },
+          __WEBPACK_IMPORTED_MODULE_13_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_6_slate_react__["Editor"], {
             className: 'markdown-body',
             value: this.state.value,
             onChange: this.onChange,
             plugins: plugins,
             renderNode: this.renderNode,
             renderMark: this.renderMark,
-            decorateNode: this.decorateNode
+            decorateNode: this.decorateNode,
+            __source: {
+              fileName: _jsxFileName,
+              lineNumber: 127
+            }
           })
         )
       );
@@ -1686,7 +2865,10 @@ var SparkerEditor = function (_React$Component) {
   }]);
 
   return SparkerEditor;
-}(__WEBPACK_IMPORTED_MODULE_12_react___default.a.Component);
+}(__WEBPACK_IMPORTED_MODULE_13_react___default.a.Component), _class.propTypes = {
+  match: __WEBPACK_IMPORTED_MODULE_7_prop_types___default.a.object.isRequired
+}, _temp);
+
 
 
 
@@ -1782,6 +2964,8 @@ function MarkdownPlugins(options) {
           return onBackspace(event, change);
         case 'Enter':
           return onEnter(event, change);
+        case '*':
+          return handleBold(event, change);
         default:
           return;
       }
@@ -1789,17 +2973,75 @@ function MarkdownPlugins(options) {
   };
 }
 
+function handleBold(event, change) {
+  var value = change.value;
+
+  if (value.isExpanded) return;
+  var startBlock = value.startBlock,
+      startOffset = value.startOffset;
+
+  var chars = startBlock.text;
+  if (isToggleMark('*', chars, startOffset)) {
+    var _findDeleteRangeAndTa = findDeleteRangeAndTargetChars(change, chars, startOffset),
+        deleteRange = _findDeleteRangeAndTa.deleteRange,
+        boldChars = _findDeleteRangeAndTa.boldChars;
+
+    event.preventDefault();
+    change.deleteForward(deleteRange).insertText(boldChars).extend(-boldChars.length).addMark('bold').collapseToEnd();
+  }
+  return true;
+}
+
+function isToggleMark(markChar, chars, offset) {
+  if (chars[offset] === markChar || chars[offset - 1] === markChar) {
+    if (chars.match(/\*\*/gi) && chars.match(/\*\*/gi).length >= 1 && chars.match(/\*/gi).length >= 3) {
+      return true;
+    }
+  }
+}
+function findDeleteRangeAndTargetChars(change, chars, startOffset) {
+  var firstIndex = chars.indexOf('**');
+  var boldChars = void 0,
+      deleteRange = void 0;
+  // 若是在后面插入**
+  if (startOffset > firstIndex + 1) {
+    change.move(-startOffset).move(firstIndex);
+    // 当插入位置为前面
+    if (chars[startOffset] === '*') {
+      deleteRange = startOffset - firstIndex + 1;
+      boldChars = chars.slice(firstIndex + 2, startOffset);
+    } else {
+      // 当插入位置是在后面
+      deleteRange = startOffset - firstIndex;
+      boldChars = chars.slice(firstIndex + 2, startOffset - 1);
+    }
+  } else {
+    // 在后面插入**
+    if (chars[startOffset] === '*') {
+      deleteRange = firstIndex - startOffset + 2;
+      boldChars = chars.slice(startOffset + 1, firstIndex);
+    } else {
+      deleteRange = firstIndex - startOffset + 3;
+      change.move(-1);
+      boldChars = chars.slice(startOffset, firstIndex);
+    }
+  }
+  return {
+    boldChars: boldChars,
+    deleteRange: deleteRange
+  };
+}
+
+// 输入tab,换成两个空格
 function onTab(event, change) {
   var value = change.value;
 
   if (value.isExpanded) return;
 
-  // if (startBlock.type === 'code') {
   event.preventDefault();
   change.delete();
   change.insertText('  ');
   return true;
-  // }
 }
 
 function onSpace(event, change) {
@@ -1944,11 +3186,16 @@ function getType(type) {
 
 
 
+var _class,
+    _temp2,
+    _jsxFileName = '/Users/chenjigeng/Project/web/tttt/src/Component/Toolbar.js';
 
 
 
 
-var Toolbar = function (_React$Component) {
+
+
+var Toolbar = (_temp2 = _class = function (_React$Component) {
   __WEBPACK_IMPORTED_MODULE_4_babel_runtime_helpers_inherits___default()(Toolbar, _React$Component);
 
   function Toolbar() {
@@ -2007,12 +3254,25 @@ var Toolbar = function (_React$Component) {
         __WEBPACK_IMPORTED_MODULE_8__SparkComponent__["h" /* ToolTip */],
         {
           key: type,
-          content: tooltip
+          content: tooltip,
+          __source: {
+            fileName: _jsxFileName,
+            lineNumber: 57
+          }
         },
         __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
           'span',
-          { key: type, className: 'button', onMouseDown: onMouseDown, 'data-active': isActive },
-          __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(Icon, null)
+          { key: type, className: 'button', onMouseDown: onMouseDown, 'data-active': isActive, __source: {
+              fileName: _jsxFileName,
+              lineNumber: 61
+            }
+          },
+          __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(Icon, {
+            __source: {
+              fileName: _jsxFileName,
+              lineNumber: 62
+            }
+          })
         )
       );
     }, _this.renderButtons = function () {
@@ -2026,99 +3286,204 @@ var Toolbar = function (_React$Component) {
 
       var list = [_this.renderButton('bold', __WEBPACK_IMPORTED_MODULE_7__Icons__["c" /* MdBoldIcon */], __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
         'div',
-        null,
+        {
+          __source: {
+            fileName: _jsxFileName,
+            lineNumber: 79
+          }
+        },
         __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
           'div',
-          null,
+          {
+            __source: {
+              fileName: _jsxFileName,
+              lineNumber: 80
+            }
+          },
           '\u7C97\u4F53'
         ),
         __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
           'div',
-          null,
+          {
+            __source: {
+              fileName: _jsxFileName,
+              lineNumber: 81
+            }
+          },
           key,
           '+B'
         )
       ), true), _this.renderButton('italic', __WEBPACK_IMPORTED_MODULE_7__Icons__["e" /* MdItalicIcon */], __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
         'div',
-        null,
+        {
+          __source: {
+            fileName: _jsxFileName,
+            lineNumber: 85
+          }
+        },
         __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
           'div',
-          null,
+          {
+            __source: {
+              fileName: _jsxFileName,
+              lineNumber: 86
+            }
+          },
           '\u659C\u4F53'
         ),
         __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
           'div',
-          null,
+          {
+            __source: {
+              fileName: _jsxFileName,
+              lineNumber: 87
+            }
+          },
           key,
           '+I'
         )
       ), true), _this.renderButton('strikethrough', __WEBPACK_IMPORTED_MODULE_7__Icons__["g" /* MdStrikethroughIcon */], __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
         'div',
-        null,
+        {
+          __source: {
+            fileName: _jsxFileName,
+            lineNumber: 91
+          }
+        },
         __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
           'div',
-          null,
+          {
+            __source: {
+              fileName: _jsxFileName,
+              lineNumber: 92
+            }
+          },
           '\u4E0B\u5212\u7EBF'
         ),
         __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
           'div',
-          null,
+          {
+            __source: {
+              fileName: _jsxFileName,
+              lineNumber: 93
+            }
+          },
           key,
           '+S'
         )
       ), true), _this.renderButton('underline', __WEBPACK_IMPORTED_MODULE_7__Icons__["h" /* MdUnderlineIcon */], __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
         'div',
-        null,
+        {
+          __source: {
+            fileName: _jsxFileName,
+            lineNumber: 97
+          }
+        },
         __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
           'div',
-          null,
+          {
+            __source: {
+              fileName: _jsxFileName,
+              lineNumber: 98
+            }
+          },
           '\u4E0B\u5212\u7EBF'
         ),
         __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
           'div',
-          null,
+          {
+            __source: {
+              fileName: _jsxFileName,
+              lineNumber: 99
+            }
+          },
           key,
           '+U'
         )
       ), true), _this.renderButton('order-list', __WEBPACK_IMPORTED_MODULE_7__Icons__["a" /* GoListOrderIcon */], __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
         'div',
-        null,
+        {
+          __source: {
+            fileName: _jsxFileName,
+            lineNumber: 103
+          }
+        },
         __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
           'div',
-          null,
+          {
+            __source: {
+              fileName: _jsxFileName,
+              lineNumber: 104
+            }
+          },
           '\u6709\u5E8F\u5217\u8868'
         ),
         __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
           'div',
-          null,
+          {
+            __source: {
+              fileName: _jsxFileName,
+              lineNumber: 105
+            }
+          },
           key,
           '+Shift+O'
         )
       )), _this.renderButton('unorder-list', __WEBPACK_IMPORTED_MODULE_7__Icons__["b" /* GoListUnorderIcon */], __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
         'div',
-        null,
+        {
+          __source: {
+            fileName: _jsxFileName,
+            lineNumber: 109
+          }
+        },
         __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
           'div',
-          null,
+          {
+            __source: {
+              fileName: _jsxFileName,
+              lineNumber: 110
+            }
+          },
           '\u65E0\u5E8F\u5217\u8868'
         ),
         __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
           'div',
-          null,
+          {
+            __source: {
+              fileName: _jsxFileName,
+              lineNumber: 111
+            }
+          },
           key,
           '+Shift+U'
         )
       )), _this.renderButton('check-list-item', __WEBPACK_IMPORTED_MODULE_7__Icons__["d" /* MdCheckBoxIcon */], __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
         'div',
-        null,
+        {
+          __source: {
+            fileName: _jsxFileName,
+            lineNumber: 115
+          }
+        },
         __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
           'div',
-          null,
+          {
+            __source: {
+              fileName: _jsxFileName,
+              lineNumber: 116
+            }
+          },
           '\u4EFB\u52A1\u5217\u8868'
         ),
         __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
           'div',
-          null,
+          {
+            __source: {
+              fileName: _jsxFileName,
+              lineNumber: 117
+            }
+          },
           key,
           '+Shift+C'
         )
@@ -2192,17 +3557,33 @@ var Toolbar = function (_React$Component) {
     value: function render() {
       return __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
         'div',
-        { className: 'menu toolbar-menu' },
+        { className: 'menu toolbar-menu', __source: {
+            fileName: _jsxFileName,
+            lineNumber: 182
+          }
+        },
         this.renderButtons(),
         __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
           'div',
-          { className: 'search' },
-          __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_7__Icons__["f" /* MdSearchIcon */], { className: 'search-icon' }),
+          { className: 'search', __source: {
+              fileName: _jsxFileName,
+              lineNumber: 184
+            }
+          },
+          __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_7__Icons__["f" /* MdSearchIcon */], { className: 'search-icon', __source: {
+              fileName: _jsxFileName,
+              lineNumber: 185
+            }
+          }),
           __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement('input', {
             className: 'search-box',
             type: 'search',
             placeholder: 'Search the text...',
-            onChange: this.onInputChange
+            onChange: this.onInputChange,
+            __source: {
+              fileName: _jsxFileName,
+              lineNumber: 186
+            }
           })
         )
       );
@@ -2210,7 +3591,9 @@ var Toolbar = function (_React$Component) {
   }]);
 
   return Toolbar;
-}(__WEBPACK_IMPORTED_MODULE_5_react___default.a.Component);
+}(__WEBPACK_IMPORTED_MODULE_5_react___default.a.Component), _class.propTypes = {
+  onChange: __WEBPACK_IMPORTED_MODULE_6_prop_types___default.a.func.isRequired
+}, _temp2);
 
 /***/ }),
 
@@ -2242,7 +3625,7 @@ var Toolbar = function (_React$Component) {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_socket_io_client___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_socket_io_client__);
 
 
-var sockerServer =  false ? 'localhost:3000' : '';
+var sockerServer =  true ? 'localhost:3000' : '';
 
 var socketInit = function socketInit() {
   return __WEBPACK_IMPORTED_MODULE_0_socket_io_client___default()(sockerServer);
@@ -2277,13 +3660,18 @@ var socketInit = function socketInit() {
 
 
 
+var _class,
+    _temp,
+    _jsxFileName = '/Users/chenjigeng/Project/web/tttt/src/SparkComponent/Button/Button.js';
+
+
 
 if (false) {
   require('./Button.less');
   // import './Button.less';
 }
 
-var Button = function (_React$Component) {
+var Button = (_temp = _class = function (_React$Component) {
   __WEBPACK_IMPORTED_MODULE_4_babel_runtime_helpers_inherits___default()(Button, _React$Component);
 
   function Button() {
@@ -2303,14 +3691,21 @@ var Button = function (_React$Component) {
 
       return __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
         'button',
-        { className: 'spark-button', type: type, onClick: onClick },
+        { className: 'spark-button', type: type, onClick: onClick, __source: {
+            fileName: _jsxFileName,
+            lineNumber: 20
+          }
+        },
         children
       );
     }
   }]);
 
   return Button;
-}(__WEBPACK_IMPORTED_MODULE_5_react___default.a.Component);
+}(__WEBPACK_IMPORTED_MODULE_5_react___default.a.Component), _class.propTypes = {
+  type: __WEBPACK_IMPORTED_MODULE_6_prop_types___default.a.string,
+  onClick: __WEBPACK_IMPORTED_MODULE_6_prop_types___default.a.func
+}, _temp);
 
 /***/ }),
 
@@ -2352,13 +3747,18 @@ var Button = function (_React$Component) {
 
 
 
+var _class,
+    _temp,
+    _jsxFileName = '/Users/chenjigeng/Project/web/tttt/src/SparkComponent/CheckBox/CheckBox.js';
+
+
 
 // import './checkBox.less';
 if (false) {
   require('./checkBox.less');
 }
 
-var CheckBox = function (_React$Component) {
+var CheckBox = (_temp = _class = function (_React$Component) {
   __WEBPACK_IMPORTED_MODULE_5_babel_runtime_helpers_inherits___default()(CheckBox, _React$Component);
 
   function CheckBox() {
@@ -2382,25 +3782,51 @@ var CheckBox = function (_React$Component) {
         'div',
         __WEBPACK_IMPORTED_MODULE_0_babel_runtime_helpers_extends___default()({
           className: 'spark-checkbox-wrapper ' + (className ? className : '') + ' ' + (checked ? 'checked' : '')
-        }, attributes),
+        }, attributes, {
+          __source: {
+            fileName: _jsxFileName,
+            lineNumber: 21
+          }
+        }),
         __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(
           'span',
-          { className: 'spark-checkbox' },
+          { className: 'spark-checkbox', __source: {
+              fileName: _jsxFileName,
+              lineNumber: 25
+            }
+          },
           __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement('input', {
             className: 'checkbox',
             type: 'checkbox',
             checked: checked,
-            onChange: onChange
+            onChange: onChange,
+            __source: {
+              fileName: _jsxFileName,
+              lineNumber: 26
+            }
           }),
           __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(
             'span',
-            { className: 'spark-checkbox-inner' },
-            checked && __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement('i', { className: 'fa fa-check', 'aria-hidden': 'true' })
+            { className: 'spark-checkbox-inner', __source: {
+                fileName: _jsxFileName,
+                lineNumber: 32
+              }
+            },
+            checked && __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement('i', { className: 'fa fa-check', 'aria-hidden': 'true', __source: {
+                fileName: _jsxFileName,
+                lineNumber: 33
+              }
+            })
           )
         ),
         __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(
           'span',
-          null,
+          {
+            __source: {
+              fileName: _jsxFileName,
+              lineNumber: 36
+            }
+          },
           children
         )
       );
@@ -2408,7 +3834,12 @@ var CheckBox = function (_React$Component) {
   }]);
 
   return CheckBox;
-}(__WEBPACK_IMPORTED_MODULE_6_react___default.a.Component);
+}(__WEBPACK_IMPORTED_MODULE_6_react___default.a.Component), _class.propTypes = {
+  className: __WEBPACK_IMPORTED_MODULE_7_prop_types___default.a.string,
+  attributes: __WEBPACK_IMPORTED_MODULE_7_prop_types___default.a.any,
+  checked: __WEBPACK_IMPORTED_MODULE_7_prop_types___default.a.bool,
+  onChange: __WEBPACK_IMPORTED_MODULE_7_prop_types___default.a.func
+}, _temp);
 
 /***/ }),
 
@@ -2447,13 +3878,18 @@ var CheckBox = function (_React$Component) {
 
 
 
+var _class,
+    _temp2,
+    _jsxFileName = '/Users/chenjigeng/Project/web/tttt/src/SparkComponent/Dialog/Dialog.js';
+
+
 
 // import './dialog.less';
 if (false) {
   require('./dialog.less');
 }
 
-var Dialog = function (_React$Component) {
+var Dialog = (_temp2 = _class = function (_React$Component) {
   __WEBPACK_IMPORTED_MODULE_4_babel_runtime_helpers_inherits___default()(Dialog, _React$Component);
 
   function Dialog() {
@@ -2474,13 +3910,26 @@ var Dialog = function (_React$Component) {
 
       return __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
         'div',
-        { className: 'spark-dialog-header' },
+        { className: 'spark-dialog-header', __source: {
+            fileName: _jsxFileName,
+            lineNumber: 47
+          }
+        },
         __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
           'span',
-          null,
+          {
+            __source: {
+              fileName: _jsxFileName,
+              lineNumber: 48
+            }
+          },
           title
         ),
-        __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement('i', { className: 'spark-icon-close', onClick: onCancel })
+        __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement('i', { className: 'spark-icon-close', onClick: onCancel, __source: {
+            fileName: _jsxFileName,
+            lineNumber: 49
+          }
+        })
       );
     }, _temp), __WEBPACK_IMPORTED_MODULE_3_babel_runtime_helpers_possibleConstructorReturn___default()(_this, _ret);
   }
@@ -2526,8 +3975,16 @@ var Dialog = function (_React$Component) {
 
       return __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
         'div',
-        { className: 'spark-dialog ' + className },
-        __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement('div', { className: 'spark-dialog-wrapper', onClick: onCancel, style: { display: visible ? 'block' : 'none' } }),
+        { className: 'spark-dialog ' + className, __source: {
+            fileName: _jsxFileName,
+            lineNumber: 58
+          }
+        },
+        __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement('div', { className: 'spark-dialog-wrapper', onClick: onCancel, style: { display: visible ? 'block' : 'none' }, __source: {
+            fileName: _jsxFileName,
+            lineNumber: 59
+          }
+        }),
         __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
           'div',
           {
@@ -2535,6 +3992,10 @@ var Dialog = function (_React$Component) {
             style: { display: visible ? 'block' : 'none' },
             ref: function ref(dialogContent) {
               return _this2.dialogContent = dialogContent;
+            },
+            __source: {
+              fileName: _jsxFileName,
+              lineNumber: 60
             }
           },
           title && this.renderHeader(),
@@ -2545,12 +4006,20 @@ var Dialog = function (_React$Component) {
   }]);
 
   return Dialog;
-}(__WEBPACK_IMPORTED_MODULE_5_react___default.a.Component);
+}(__WEBPACK_IMPORTED_MODULE_5_react___default.a.Component), _class.propTypes = {
+  visible: __WEBPACK_IMPORTED_MODULE_6_prop_types___default.a.bool.isRequired,
+  title: __WEBPACK_IMPORTED_MODULE_6_prop_types___default.a.string,
+  onCancel: __WEBPACK_IMPORTED_MODULE_6_prop_types___default.a.func.isRequired,
+  className: __WEBPACK_IMPORTED_MODULE_6_prop_types___default.a.string }, _temp2);
 
 Dialog.Header = function (props) {
   return __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
     'div',
-    { className: 'spark-dialog-header' },
+    { className: 'spark-dialog-header', __source: {
+        fileName: _jsxFileName,
+        lineNumber: 74
+      }
+    },
     props.children
   );
 };
@@ -2558,7 +4027,11 @@ Dialog.Header = function (props) {
 Dialog.Body = function (props) {
   return __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
     'div',
-    { className: 'spark-dialog-body' },
+    { className: 'spark-dialog-body', __source: {
+        fileName: _jsxFileName,
+        lineNumber: 80
+      }
+    },
     props.children
   );
 };
@@ -2566,7 +4039,11 @@ Dialog.Body = function (props) {
 Dialog.Footer = function (props) {
   return __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
     'div',
-    { className: 'spark-dialog-footer' },
+    { className: 'spark-dialog-footer', __source: {
+        fileName: _jsxFileName,
+        lineNumber: 86
+      }
+    },
     props.children
   );
 };
@@ -2608,6 +4085,11 @@ Dialog.Footer = function (props) {
 
 
 
+var _class,
+    _temp,
+    _jsxFileName = '/Users/chenjigeng/Project/web/tttt/src/SparkComponent/Input/Input.js';
+
+
 
 // import './Input.less';
 
@@ -2615,7 +4097,7 @@ if (false) {
   require('./Input.less');
 }
 
-var Input = function (_React$Component) {
+var Input = (_temp = _class = function (_React$Component) {
   __WEBPACK_IMPORTED_MODULE_4_babel_runtime_helpers_inherits___default()(Input, _React$Component);
 
   function Input() {
@@ -2639,13 +4121,24 @@ var Input = function (_React$Component) {
         placeholder: placeholder,
         disabled: disabled,
         onChange: onChange,
-        type: type
+        type: type,
+        __source: {
+          fileName: _jsxFileName,
+          lineNumber: 24
+        }
       });
     }
   }]);
 
   return Input;
-}(__WEBPACK_IMPORTED_MODULE_5_react___default.a.Component);
+}(__WEBPACK_IMPORTED_MODULE_5_react___default.a.Component), _class.propTypes = {
+  placeholder: __WEBPACK_IMPORTED_MODULE_6_prop_types___default.a.string.isRequired,
+  disabled: __WEBPACK_IMPORTED_MODULE_6_prop_types___default.a.bool,
+  defaultValue: __WEBPACK_IMPORTED_MODULE_6_prop_types___default.a.string,
+  type: __WEBPACK_IMPORTED_MODULE_6_prop_types___default.a.string,
+  onChange: __WEBPACK_IMPORTED_MODULE_6_prop_types___default.a.func,
+  onPressEnter: __WEBPACK_IMPORTED_MODULE_6_prop_types___default.a.func
+}, _temp);
 
 /***/ }),
 
@@ -2681,6 +4174,7 @@ var Input = function (_React$Component) {
 
 
 
+var _jsxFileName = '/Users/chenjigeng/Project/web/tttt/src/SparkComponent/Loading/Loading.js';
 // import './Loading.less';
 
 if (false) {
@@ -2701,15 +4195,49 @@ var Loading = function (_React$Component) {
     value: function render() {
       return __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
         'div',
-        null,
+        {
+          __source: {
+            fileName: _jsxFileName,
+            lineNumber: 10
+          }
+        },
         __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
           'div',
-          { className: 'spark-loading' },
-          __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement('span', null),
-          __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement('span', null),
-          __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement('span', null),
-          __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement('span', null),
-          __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement('span', null)
+          { className: 'spark-loading', __source: {
+              fileName: _jsxFileName,
+              lineNumber: 11
+            }
+          },
+          __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement('span', {
+            __source: {
+              fileName: _jsxFileName,
+              lineNumber: 12
+            }
+          }),
+          __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement('span', {
+            __source: {
+              fileName: _jsxFileName,
+              lineNumber: 13
+            }
+          }),
+          __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement('span', {
+            __source: {
+              fileName: _jsxFileName,
+              lineNumber: 14
+            }
+          }),
+          __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement('span', {
+            __source: {
+              fileName: _jsxFileName,
+              lineNumber: 15
+            }
+          }),
+          __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement('span', {
+            __source: {
+              fileName: _jsxFileName,
+              lineNumber: 16
+            }
+          })
         )
       );
     }
@@ -2730,6 +4258,7 @@ var Loading = function (_React$Component) {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_react___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_react__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_react_dom__ = __webpack_require__("react-dom");
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_react_dom___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_react_dom__);
+var _jsxFileName = '/Users/chenjigeng/Project/web/tttt/src/SparkComponent/Loading/index.js';
 
 
 
@@ -2745,7 +4274,12 @@ var SparkLoading = {
   show: function show() {
     if (!el) {
       el = document.createElement('div');
-      __WEBPACK_IMPORTED_MODULE_2_react_dom___default.a.render(__WEBPACK_IMPORTED_MODULE_1_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_0__Loading__["a" /* Loading */], null), el);
+      __WEBPACK_IMPORTED_MODULE_2_react_dom___default.a.render(__WEBPACK_IMPORTED_MODULE_1_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_0__Loading__["a" /* Loading */], {
+        __source: {
+          fileName: _jsxFileName,
+          lineNumber: 18
+        }
+      }), el);
       body.appendChild(el);
     }
     el.style.display = 'block';
@@ -2782,6 +4316,7 @@ var SparkLoading = {
 
 
 
+var _jsxFileName = '/Users/chenjigeng/Project/web/tttt/src/SparkComponent/Message/Message.js';
 
 // import './Message.less';
 
@@ -2853,7 +4388,11 @@ var Message = function (_React$Component) {
           onClose: onClose,
           content: message.content,
           duration: message.duration || 3,
-          type: message.type
+          type: message.type,
+          __source: {
+            fileName: _jsxFileName,
+            lineNumber: 45
+          }
         });
       });
       return messageNodes;
@@ -2863,7 +4402,11 @@ var Message = function (_React$Component) {
     value: function render() {
       return __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
         'div',
-        { className: 'spark-message' },
+        { className: 'spark-message', __source: {
+            fileName: _jsxFileName,
+            lineNumber: 59
+          }
+        },
         this.renderMessages()
       );
     }
@@ -2899,9 +4442,14 @@ var Message = function (_React$Component) {
 
 
 
+var _class,
+    _temp2,
+    _jsxFileName = '/Users/chenjigeng/Project/web/tttt/src/SparkComponent/Message/Notify.js';
 
 
-var Notify = function (_React$Component) {
+
+
+var Notify = (_temp2 = _class = function (_React$Component) {
   __WEBPACK_IMPORTED_MODULE_4_babel_runtime_helpers_inherits___default()(Notify, _React$Component);
 
   function Notify() {
@@ -2953,16 +4501,28 @@ var Notify = function (_React$Component) {
       return __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
         'div',
         {
-          className: 'spark-message-notify'
+          className: 'spark-message-notify',
+          __source: {
+            fileName: _jsxFileName,
+            lineNumber: 41
+          }
         },
         __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
           'div',
           {
             className: 'spark-message-notify-content',
             onMouseEnter: this.handleMouseEnter,
-            onMouseLeave: this.handleMouseLeave
+            onMouseLeave: this.handleMouseLeave,
+            __source: {
+              fileName: _jsxFileName,
+              lineNumber: 44
+            }
           },
-          __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement('i', { type: type }),
+          __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement('i', { type: type, __source: {
+              fileName: _jsxFileName,
+              lineNumber: 49
+            }
+          }),
           content
         )
       );
@@ -2970,7 +4530,12 @@ var Notify = function (_React$Component) {
   }]);
 
   return Notify;
-}(__WEBPACK_IMPORTED_MODULE_5_react___default.a.Component);
+}(__WEBPACK_IMPORTED_MODULE_5_react___default.a.Component), _class.propTypes = {
+  duration: __WEBPACK_IMPORTED_MODULE_6_prop_types___default.a.number,
+  onClose: __WEBPACK_IMPORTED_MODULE_6_prop_types___default.a.func.isRequired,
+  type: __WEBPACK_IMPORTED_MODULE_6_prop_types___default.a.string.isRequired,
+  content: __WEBPACK_IMPORTED_MODULE_6_prop_types___default.a.any.isRequired
+}, _temp2);
 
 /***/ }),
 
@@ -2984,6 +4549,7 @@ var Notify = function (_React$Component) {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_react_dom___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_react_dom__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_react__ = __webpack_require__("react");
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_react___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_react__);
+var _jsxFileName = '/Users/chenjigeng/Project/web/tttt/src/SparkComponent/Message/index.js';
 
 
 
@@ -2995,7 +4561,12 @@ var MessageManager = {
     if (!this.messageInstance) {
       this.container = document.createElement('div');
       document.body.appendChild(this.container);
-      this.messageInstance = __WEBPACK_IMPORTED_MODULE_1_react_dom___default.a.render(__WEBPACK_IMPORTED_MODULE_2_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_0__Message__["a" /* Message */], null), this.container);
+      this.messageInstance = __WEBPACK_IMPORTED_MODULE_1_react_dom___default.a.render(__WEBPACK_IMPORTED_MODULE_2_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_0__Message__["a" /* Message */], {
+        __source: {
+          fileName: _jsxFileName,
+          lineNumber: 12
+        }
+      }), this.container);
     }
     return this.messageInstance;
   },
@@ -3059,6 +4630,7 @@ var message = {
 
 
 
+var _jsxFileName = '/Users/chenjigeng/Project/web/tttt/src/SparkComponent/Nav/Nav.js';
 
 // import './Nav.less';
 if (false) {
@@ -3079,7 +4651,11 @@ var Nav = function (_React$Component) {
     value: function render() {
       return __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
         'div',
-        { className: 'spark-nav' },
+        { className: 'spark-nav', __source: {
+            fileName: _jsxFileName,
+            lineNumber: 11
+          }
+        },
         this.props.children
       );
     }
@@ -3091,7 +4667,11 @@ var Nav = function (_React$Component) {
 Nav.title = function (props) {
   return __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
     'div',
-    { className: 'spark-nav__title' },
+    { className: 'spark-nav__title', __source: {
+        fileName: _jsxFileName,
+        lineNumber: 19
+      }
+    },
     props.children
   );
 };
@@ -3099,7 +4679,11 @@ Nav.title = function (props) {
 Nav.content = function (props) {
   return __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
     'div',
-    { className: 'spark-nav__content ' + props.className },
+    { className: 'spark-nav__content ' + props.className, __source: {
+        fileName: _jsxFileName,
+        lineNumber: 25
+      }
+    },
     props.children
   );
 };
@@ -3138,6 +4722,7 @@ Nav.content = function (props) {
 
 
 
+var _jsxFileName = "/Users/chenjigeng/Project/web/tttt/src/SparkComponent/Tabs/TabPane.js";
 
 
 var TabPane = function (_React$Component) {
@@ -3154,7 +4739,11 @@ var TabPane = function (_React$Component) {
     value: function render() {
       return __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
         "div",
-        { className: "spark-tabpane" },
+        { className: "spark-tabpane", __source: {
+            fileName: _jsxFileName,
+            lineNumber: 7
+          }
+        },
         this.props.children
       );
     }
@@ -3193,6 +4782,11 @@ var TabPane = function (_React$Component) {
 
 
 
+var _class,
+    _temp,
+    _jsxFileName = '/Users/chenjigeng/Project/web/tttt/src/SparkComponent/Tabs/Tabs.js';
+
+
 
 // import ReactDom from 'react-dom';
 
@@ -3201,7 +4795,7 @@ var TabPane = function (_React$Component) {
 //   require('./Tabs.less');
 // }
 
-var Tabs = function (_React$Component) {
+var Tabs = (_temp = _class = function (_React$Component) {
   __WEBPACK_IMPORTED_MODULE_4_babel_runtime_helpers_inherits___default()(Tabs, _React$Component);
 
   function Tabs(props) {
@@ -3268,6 +4862,10 @@ var Tabs = function (_React$Component) {
             },
             onClick: function onClick() {
               return _this.handleClickTabBar(child.key);
+            },
+            __source: {
+              fileName: _jsxFileName,
+              lineNumber: 81
             }
           },
           child.props.tab
@@ -3276,10 +4874,18 @@ var Tabs = function (_React$Component) {
 
       return __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
         'div',
-        { className: 'spark-tabs-tabbar' },
+        { className: 'spark-tabs-tabbar', __source: {
+            fileName: _jsxFileName,
+            lineNumber: 94
+          }
+        },
         __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement('div', { className: 'spark-tabs-ink-bar', ref: function ref(inkBar) {
             return _this.inkBar = inkBar;
-          } }),
+          }, __source: {
+            fileName: _jsxFileName,
+            lineNumber: 95
+          }
+        }),
         tabBar
       );
     };
@@ -3289,7 +4895,11 @@ var Tabs = function (_React$Component) {
         'div',
         { className: 'spark-tabs-content', ref: function ref(tabsContent) {
             return _this.tabsContent = tabsContent;
-          } },
+          }, __source: {
+            fileName: _jsxFileName,
+            lineNumber: 103
+          }
+        },
         _this.props.children
       );
     };
@@ -3319,10 +4929,18 @@ var Tabs = function (_React$Component) {
     value: function render() {
       return __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
         'div',
-        { className: 'spark-tabs' },
+        { className: 'spark-tabs', __source: {
+            fileName: _jsxFileName,
+            lineNumber: 111
+          }
+        },
         __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
           'div',
-          { className: 'spark-tabs-scroll' },
+          { className: 'spark-tabs-scroll', __source: {
+              fileName: _jsxFileName,
+              lineNumber: 112
+            }
+          },
           this.renderTabBar()
         ),
         this.renderTabContent()
@@ -3331,7 +4949,10 @@ var Tabs = function (_React$Component) {
   }]);
 
   return Tabs;
-}(__WEBPACK_IMPORTED_MODULE_5_react___default.a.Component);
+}(__WEBPACK_IMPORTED_MODULE_5_react___default.a.Component), _class.propTypes = {
+  activeKey: __WEBPACK_IMPORTED_MODULE_6_prop_types___default.a.string,
+  onChange: __WEBPACK_IMPORTED_MODULE_6_prop_types___default.a.func
+}, _temp);
 
 Tabs.TabPane = __WEBPACK_IMPORTED_MODULE_7__TabPane__["a" /* TabPane */];
 
@@ -3386,6 +5007,7 @@ exports.push([module.i, ".spark-tabs {\n\n  overflow: hidden;\n\n  .spark-tabs-s
 
 
 
+var _jsxFileName = '/Users/chenjigeng/Project/web/tttt/src/SparkComponent/ToolTip/ToolTip.js';
 
 
 // if (process.env.BUILD_TARGET !== 'server') {
@@ -3425,13 +5047,21 @@ var ToolTip = function (_React$Component) {
 
       return __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
         'div',
-        { className: 'spark-tooltip', onMouseOver: this.updateToolTip },
+        { className: 'spark-tooltip', onMouseOver: this.updateToolTip, __source: {
+            fileName: _jsxFileName,
+            lineNumber: 20
+          }
+        },
         __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
           'div',
           {
             className: 'spark-tooltip__content',
             ref: function ref(content) {
               return _this2.content = content;
+            },
+            __source: {
+              fileName: _jsxFileName,
+              lineNumber: 21
             }
           },
           children
@@ -3442,11 +5072,20 @@ var ToolTip = function (_React$Component) {
             className: 'spark-tooltip__popup',
             ref: function ref(popup) {
               return _this2.popup = popup;
+            },
+            __source: {
+              fileName: _jsxFileName,
+              lineNumber: 27
             }
           },
           __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
             'div',
-            null,
+            {
+              __source: {
+                fileName: _jsxFileName,
+                lineNumber: 31
+              }
+            },
             content
           )
         )
@@ -3568,13 +5207,14 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 
 
 
-var server = __WEBPACK_IMPORTED_MODULE_1_http___default.a.createServer(__WEBPACK_IMPORTED_MODULE_0__server__["a" /* default */]);
+var server = __WEBPACK_IMPORTED_MODULE_1_http___default.a.createServer(__WEBPACK_IMPORTED_MODULE_0__server__["default"]);
 
-var io = Object(__WEBPACK_IMPORTED_MODULE_2__server_socket__["a" /* default */])(server);
+var io = Object(__WEBPACK_IMPORTED_MODULE_2__server_socket__["default"])(server);
 
-var currentApp = __WEBPACK_IMPORTED_MODULE_0__server__["a" /* default */];
+/* eslint-disable */
+var currentApp = __WEBPACK_IMPORTED_MODULE_0__server__["default"];
 
-server.listen(3000 || 3000, function (error) {
+server.listen("3000" || 3000, function (error) {
   if (error) {
     console.log(error);
   }
@@ -3582,19 +5222,19 @@ server.listen(3000 || 3000, function (error) {
   console.log('🚀 started');
 });
 
-if (false) {
+if (true) {
   console.log('✅  Server-side HMR Enabled!');
 
-  module.hot.accept('./server.js', function () {
+  module.hot.accept("./src/server.js", function () {
     console.log('🔁  HMR Reloading `./server`...');
     server.close(function () {
       console.log('关闭这个');
     });
     io.close();
     // server.removeAllListeners();
-    var newApp = require('./server').default;
-    var newServer = http.createServer(newApp);
-    io = initSocket(newServer);
+    var newApp = __webpack_require__("./src/server.js").default;
+    var newServer = __WEBPACK_IMPORTED_MODULE_1_http___default.a.createServer(newApp);
+    io = Object(__WEBPACK_IMPORTED_MODULE_2__server_socket__["default"])(newServer);
     newServer.listen(3000, function (err) {
       console.log('重连');
     });
@@ -3602,10 +5242,10 @@ if (false) {
     console.log('5555');
   });
 
-  module.hot.accept('./server/socket/index', function () {
+  module.hot.accept("./src/server/socket/index.js", function () {
     console.log('server socket reload');
     server.close();
-    require('./server/socket').default(server);
+    __webpack_require__("./src/server/socket/index.js").default(server);
     server.listen(3000, function (error) {
       console.log('更新了socket');
     });
@@ -4177,6 +5817,7 @@ function Logout() {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_react_router_dom___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_react_router_dom__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__views_Doc__ = __webpack_require__("./src/views/Doc/index.js");
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__views_Home__ = __webpack_require__("./src/views/Home/index.js");
+var _jsxFileName = '/Users/chenjigeng/Project/web/tttt/src/router/index.js';
 
 
 
@@ -4185,12 +5826,29 @@ function Logout() {
 var Router = function Router() {
   return __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
     'div',
-    { className: 'spark-router' },
+    { className: 'spark-router', __source: {
+        fileName: _jsxFileName,
+        lineNumber: 10
+      }
+    },
     __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
       __WEBPACK_IMPORTED_MODULE_1_react_router_dom__["Switch"],
-      null,
-      __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_1_react_router_dom__["Route"], { exact: true, path: '/', component: __WEBPACK_IMPORTED_MODULE_3__views_Home__["a" /* Home */] }),
-      __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_1_react_router_dom__["Route"], { path: '/doc/:docId', component: __WEBPACK_IMPORTED_MODULE_2__views_Doc__["a" /* Doc */] })
+      {
+        __source: {
+          fileName: _jsxFileName,
+          lineNumber: 11
+        }
+      },
+      __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_1_react_router_dom__["Route"], { exact: true, path: '/', component: __WEBPACK_IMPORTED_MODULE_3__views_Home__["a" /* Home */], __source: {
+          fileName: _jsxFileName,
+          lineNumber: 12
+        }
+      }),
+      __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_1_react_router_dom__["Route"], { path: '/doc/:docId', component: __WEBPACK_IMPORTED_MODULE_2__views_Doc__["a" /* Doc */], __source: {
+          fileName: _jsxFileName,
+          lineNumber: 13
+        }
+      })
     )
   );
 };
@@ -4203,6 +5861,7 @@ var Router = function Router() {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
+Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_react__ = __webpack_require__("react");
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_react___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_react__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_react_router_dom__ = __webpack_require__("react-router-dom");
@@ -4216,6 +5875,7 @@ var Router = function Router() {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_react_redux__ = __webpack_require__("react-redux");
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_react_redux___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_6_react_redux__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__server_app__ = __webpack_require__("./src/server/app.js");
+var _jsxFileName = '/Users/chenjigeng/Project/web/tttt/src/server.js';
 
 
 
@@ -4230,26 +5890,39 @@ var assets = __webpack_require__("./build/assets.json");
 
 var server = __WEBPACK_IMPORTED_MODULE_2_express___default()();
 Object(__WEBPACK_IMPORTED_MODULE_7__server_app__["a" /* default */])(server);
-server.use(__WEBPACK_IMPORTED_MODULE_2_express___default.a.static("/Users/chenjigeng/Project/web/tttt/build/public")).get('/*', function (req, res) {
+server.use(__WEBPACK_IMPORTED_MODULE_2_express___default.a.static("/Users/chenjigeng/Project/web/tttt/public")).get('/*', function (req, res) {
   var context = {};
   var markup = Object(__WEBPACK_IMPORTED_MODULE_3_react_dom_server__["renderToString"])(__WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
     __WEBPACK_IMPORTED_MODULE_6_react_redux__["Provider"],
-    { store: __WEBPACK_IMPORTED_MODULE_5__redux__["a" /* default */] },
+    { store: __WEBPACK_IMPORTED_MODULE_5__redux__["a" /* default */], __source: {
+        fileName: _jsxFileName,
+        lineNumber: 21
+      }
+    },
     __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(
       __WEBPACK_IMPORTED_MODULE_1_react_router_dom__["StaticRouter"],
-      { context: context, location: req.url },
-      __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_4__App__["a" /* default */], null)
+      { context: context, location: req.url, __source: {
+          fileName: _jsxFileName,
+          lineNumber: 22
+        }
+      },
+      __WEBPACK_IMPORTED_MODULE_0_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_4__App__["a" /* default */], {
+        __source: {
+          fileName: _jsxFileName,
+          lineNumber: 23
+        }
+      })
     )
   ));
 
   if (context.url) {
     res.redirect(context.url);
   } else {
-    res.status(200).send('<!doctype html>\n    <html lang="">\n    <head>\n        <meta http-equiv="X-UA-Compatible" content="IE=edge" />\n        <meta charset="utf-8" />\n        <title>Welcome to Sparker</title>\n        <meta name="viewport" content="width=device-width, initial-scale=1">\n        ' + (assets.client.css ? '<link rel="stylesheet" href="' + assets.client.css + '">' : '') + '\n        ' + ( true ? '<script src="' + assets.client.js + '" defer></script>' : '<script src="' + assets.client.js + '" defer crossorigin></script>') + '\n    </head>\n    <body>\n        <div id="root">' + markup + '</div>\n    </body>\n</html>');
+    res.status(200).send('<!doctype html>\n    <html lang="">\n    <head>\n        <meta http-equiv="X-UA-Compatible" content="IE=edge" />\n        <meta charset="utf-8" />\n        <title>Welcome to Sparker</title>\n        <meta name="viewport" content="width=device-width, initial-scale=1">\n        ' + (assets.client.css ? '<link rel="stylesheet" href="' + assets.client.css + '">' : '') + '\n        ' + ( false ? '<script src="' + assets.client.js + '" defer></script>' : '<script src="' + assets.client.js + '" defer crossorigin></script>') + '\n    </head>\n    <body>\n        <div id="root">' + markup + '</div>\n    </body>\n</html>');
   }
 });
 
-/* harmony default export */ __webpack_exports__["a"] = (server);
+/* harmony default export */ __webpack_exports__["default"] = (server);
 
 /***/ }),
 
@@ -4260,6 +5933,8 @@ server.use(__WEBPACK_IMPORTED_MODULE_2_express___default.a.static("/Users/chenji
 /* WEBPACK VAR INJECTION */(function(__dirname) {/* harmony export (immutable) */ __webpack_exports__["a"] = initServer;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__router__ = __webpack_require__("./src/server/router/index.js");
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__model__ = __webpack_require__("./src/server/model/index.js");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__redis_index__ = __webpack_require__("./src/server/redis/index.js");
+
 
 
 
@@ -4267,12 +5942,11 @@ var bodyParser = __webpack_require__("body-parser");
 var express = __webpack_require__("express");
 var path = __webpack_require__("path");
 var session = __webpack_require__("express-session");
-// const path = require('path');
-// const cors = require('cors');
-
+var redisStore = __webpack_require__("connect-redis")(session);
 
 function initServer(app) {
 
+  // 支持cors
   // app.use(function (req, res, next) {
   //   res.header('Access-Control-Allow-Origin', '*');        
   //   res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
@@ -4287,10 +5961,12 @@ function initServer(app) {
     secret: 'This is sparker server',
     cookie: { maxAge: 60 * 1000 * 60 * 24 * 14 },
     resave: false,
-    saveUninitialized: true
+    saveUninitialized: true,
+    store: new redisStore({
+      client: __WEBPACK_IMPORTED_MODULE_2__redis_index__["a" /* default */]
+    })
   }));
-  console.log(path.resolve(__dirname + '../../../build/public'));
-  console.log(path.resolve(__dirname + '/static'));
+
   app.use(express.static(path.resolve(__dirname + '../../../build/public')));
   app.use(express.static(path.resolve(__dirname + '../../../build/static')));
   app.use(express.static(path.resolve(__dirname + '../../../build')));
@@ -5258,7 +6934,6 @@ userModel.fetchUserInfo = function () {
 var redis = __webpack_require__("redis");
 
 var client = redis.createClient();
-console.log('22');
 
 client.sget = function (key) {
   return new __WEBPACK_IMPORTED_MODULE_0_babel_runtime_core_js_promise___default.a(function (resolve, reject) {
@@ -5379,6 +7054,7 @@ router.get('/', function (req, res) {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
+Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_babel_runtime_core_js_json_stringify__ = __webpack_require__("babel-runtime/core-js/json/stringify");
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_babel_runtime_core_js_json_stringify___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_babel_runtime_core_js_json_stringify__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_babel_runtime_regenerator__ = __webpack_require__("babel-runtime/regenerator");
@@ -5493,7 +7169,7 @@ function init(server) {
   return io;
 }
 
-/* harmony default export */ __webpack_exports__["a"] = (init);
+/* harmony default export */ __webpack_exports__["default"] = (init);
 
 /***/ }),
 
@@ -5658,36 +7334,41 @@ function MarkHotkey(options) {
 
 "use strict";
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return Doc; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_babel_runtime_core_js_object_get_prototype_of__ = __webpack_require__("babel-runtime/core-js/object/get-prototype-of");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_babel_runtime_core_js_object_get_prototype_of___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_babel_runtime_core_js_object_get_prototype_of__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_babel_runtime_helpers_classCallCheck__ = __webpack_require__("babel-runtime/helpers/classCallCheck");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_babel_runtime_helpers_classCallCheck___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_babel_runtime_helpers_classCallCheck__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_babel_runtime_helpers_createClass__ = __webpack_require__("babel-runtime/helpers/createClass");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_babel_runtime_helpers_createClass___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_babel_runtime_helpers_createClass__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_babel_runtime_helpers_possibleConstructorReturn__ = __webpack_require__("babel-runtime/helpers/possibleConstructorReturn");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_babel_runtime_helpers_possibleConstructorReturn___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_babel_runtime_helpers_possibleConstructorReturn__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_babel_runtime_helpers_inherits__ = __webpack_require__("babel-runtime/helpers/inherits");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_babel_runtime_helpers_inherits___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_4_babel_runtime_helpers_inherits__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_react__ = __webpack_require__("react");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_react___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_5_react__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_react_redux__ = __webpack_require__("react-redux");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_react_redux___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_6_react_redux__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__Component_SparkerEditor__ = __webpack_require__("./src/Component/SparkerEditor/index.js");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__Component_Navbar__ = __webpack_require__("./src/Component/Navbar/index.js");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_babel_runtime_helpers_extends__ = __webpack_require__("babel-runtime/helpers/extends");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_babel_runtime_helpers_extends___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_babel_runtime_helpers_extends__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_babel_runtime_core_js_object_get_prototype_of__ = __webpack_require__("babel-runtime/core-js/object/get-prototype-of");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_babel_runtime_core_js_object_get_prototype_of___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_babel_runtime_core_js_object_get_prototype_of__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_babel_runtime_helpers_classCallCheck__ = __webpack_require__("babel-runtime/helpers/classCallCheck");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_babel_runtime_helpers_classCallCheck___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_babel_runtime_helpers_classCallCheck__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_babel_runtime_helpers_createClass__ = __webpack_require__("babel-runtime/helpers/createClass");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_babel_runtime_helpers_createClass___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_babel_runtime_helpers_createClass__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_babel_runtime_helpers_possibleConstructorReturn__ = __webpack_require__("babel-runtime/helpers/possibleConstructorReturn");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_babel_runtime_helpers_possibleConstructorReturn___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_4_babel_runtime_helpers_possibleConstructorReturn__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_babel_runtime_helpers_inherits__ = __webpack_require__("babel-runtime/helpers/inherits");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_babel_runtime_helpers_inherits___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_5_babel_runtime_helpers_inherits__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_react__ = __webpack_require__("react");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_react___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_6_react__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_react_redux__ = __webpack_require__("react-redux");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_react_redux___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_7_react_redux__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__Component_SparkerEditor__ = __webpack_require__("./src/Component/SparkerEditor/index.js");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__Component_Navbar__ = __webpack_require__("./src/Component/Navbar/index.js");
 
 
 
 
 
 
-var _dec, _class;
+
+var _dec,
+    _class,
+    _jsxFileName = '/Users/chenjigeng/Project/web/tttt/src/views/Doc/Doc.js';
 
 
 
 
 
 
-var Doc = (_dec = Object(__WEBPACK_IMPORTED_MODULE_6_react_redux__["connect"])(function (state) {
+var Doc = (_dec = Object(__WEBPACK_IMPORTED_MODULE_7_react_redux__["connect"])(function (state) {
   return state;
 }, function (dispatch) {
   return {
@@ -5696,30 +7377,43 @@ var Doc = (_dec = Object(__WEBPACK_IMPORTED_MODULE_6_react_redux__["connect"])(f
     }
   };
 }), _dec(_class = function (_React$Component) {
-  __WEBPACK_IMPORTED_MODULE_4_babel_runtime_helpers_inherits___default()(Doc, _React$Component);
+  __WEBPACK_IMPORTED_MODULE_5_babel_runtime_helpers_inherits___default()(Doc, _React$Component);
 
   function Doc() {
-    __WEBPACK_IMPORTED_MODULE_1_babel_runtime_helpers_classCallCheck___default()(this, Doc);
+    __WEBPACK_IMPORTED_MODULE_2_babel_runtime_helpers_classCallCheck___default()(this, Doc);
 
-    return __WEBPACK_IMPORTED_MODULE_3_babel_runtime_helpers_possibleConstructorReturn___default()(this, (Doc.__proto__ || __WEBPACK_IMPORTED_MODULE_0_babel_runtime_core_js_object_get_prototype_of___default()(Doc)).apply(this, arguments));
+    return __WEBPACK_IMPORTED_MODULE_4_babel_runtime_helpers_possibleConstructorReturn___default()(this, (Doc.__proto__ || __WEBPACK_IMPORTED_MODULE_1_babel_runtime_core_js_object_get_prototype_of___default()(Doc)).apply(this, arguments));
   }
 
-  __WEBPACK_IMPORTED_MODULE_2_babel_runtime_helpers_createClass___default()(Doc, [{
+  __WEBPACK_IMPORTED_MODULE_3_babel_runtime_helpers_createClass___default()(Doc, [{
     key: 'render',
     value: function render() {
       var history = this.props.history;
 
-      return __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
+      return __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(
         'div',
-        { className: 'App' },
-        __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_8__Component_Navbar__["a" /* Navbar */], { history: history }),
-        __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_7__Component_SparkerEditor__["a" /* SparkerEditor */], this.props)
+        { className: 'App', __source: {
+            fileName: _jsxFileName,
+            lineNumber: 18
+          }
+        },
+        __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_9__Component_Navbar__["a" /* Navbar */], { history: history, __source: {
+            fileName: _jsxFileName,
+            lineNumber: 19
+          }
+        }),
+        __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_8__Component_SparkerEditor__["a" /* SparkerEditor */], __WEBPACK_IMPORTED_MODULE_0_babel_runtime_helpers_extends___default()({}, this.props, {
+          __source: {
+            fileName: _jsxFileName,
+            lineNumber: 20
+          }
+        }))
       );
     }
   }]);
 
   return Doc;
-}(__WEBPACK_IMPORTED_MODULE_5_react___default.a.Component)) || _class);
+}(__WEBPACK_IMPORTED_MODULE_6_react___default.a.Component)) || _class);
 
 /***/ }),
 
@@ -5804,11 +7498,16 @@ function DocSaga() {
 
 
 
+var _class,
+    _temp2,
+    _jsxFileName = '/Users/chenjigeng/Project/web/tttt/src/views/Home/DocList/CreateDocButton.js';
 
 
 
 
-var CreateDocButton = function (_React$Component) {
+
+
+var CreateDocButton = (_temp2 = _class = function (_React$Component) {
   __WEBPACK_IMPORTED_MODULE_4_babel_runtime_helpers_inherits___default()(CreateDocButton, _React$Component);
 
   function CreateDocButton() {
@@ -5839,10 +7538,18 @@ var CreateDocButton = function (_React$Component) {
     value: function render() {
       return __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
         'div',
-        { className: 'create-doc-button' },
+        { className: 'create-doc-button', __source: {
+            fileName: _jsxFileName,
+            lineNumber: 25
+          }
+        },
         __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
           __WEBPACK_IMPORTED_MODULE_6__SparkComponent__["a" /* Button */],
-          { type: 'primary', onClick: this.handleCreateDoc },
+          { type: 'primary', onClick: this.handleCreateDoc, __source: {
+              fileName: _jsxFileName,
+              lineNumber: 26
+            }
+          },
           '\u65B0\u5EFA\u6587\u6863'
         )
       );
@@ -5850,7 +7557,9 @@ var CreateDocButton = function (_React$Component) {
   }]);
 
   return CreateDocButton;
-}(__WEBPACK_IMPORTED_MODULE_5_react___default.a.Component);
+}(__WEBPACK_IMPORTED_MODULE_5_react___default.a.Component), _class.propTypes = {
+  history: __WEBPACK_IMPORTED_MODULE_8_prop_types___default.a.object.isRequired
+}, _temp2);
 
 /***/ }),
 
@@ -5881,10 +7590,15 @@ var CreateDocButton = function (_React$Component) {
 
 
 
+var _class,
+    _temp2,
+    _jsxFileName = '/Users/chenjigeng/Project/web/tttt/src/views/Home/DocList/DocItem.js';
 
 
 
-var DocItem = function (_React$Component) {
+
+
+var DocItem = (_temp2 = _class = function (_React$Component) {
   __WEBPACK_IMPORTED_MODULE_4_babel_runtime_helpers_inherits___default()(DocItem, _React$Component);
 
   function DocItem() {
@@ -5916,29 +7630,63 @@ var DocItem = function (_React$Component) {
 
       return __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
         'div',
-        { className: 'doc-item', onClick: this.handleGoTo },
+        { className: 'doc-item', onClick: this.handleGoTo, __source: {
+            fileName: _jsxFileName,
+            lineNumber: 22
+          }
+        },
         __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
           'div',
-          { className: 'doc-card' },
-          __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement('div', { className: 'doc-logo' }),
+          { className: 'doc-card', __source: {
+              fileName: _jsxFileName,
+              lineNumber: 23
+            }
+          },
+          __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement('div', { className: 'doc-logo', __source: {
+              fileName: _jsxFileName,
+              lineNumber: 24
+            }
+          }),
           __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
             'div',
-            { className: 'doc-content' },
+            { className: 'doc-content', __source: {
+                fileName: _jsxFileName,
+                lineNumber: 25
+              }
+            },
             __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
               'div',
-              null,
+              {
+                __source: {
+                  fileName: _jsxFileName,
+                  lineNumber: 26
+                }
+              },
               __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
                 'span',
-                { className: 'doc-title' },
+                { className: 'doc-title', __source: {
+                    fileName: _jsxFileName,
+                    lineNumber: 27
+                  }
+                },
                 doc.name
               )
             ),
             __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
               'div',
-              null,
+              {
+                __source: {
+                  fileName: _jsxFileName,
+                  lineNumber: 29
+                }
+              },
               __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
                 'span',
-                { className: 'doc-time' },
+                { className: 'doc-time', __source: {
+                    fileName: _jsxFileName,
+                    lineNumber: 30
+                  }
+                },
                 updateTime
               )
             )
@@ -5949,7 +7697,10 @@ var DocItem = function (_React$Component) {
   }]);
 
   return DocItem;
-}(__WEBPACK_IMPORTED_MODULE_5_react___default.a.Component);
+}(__WEBPACK_IMPORTED_MODULE_5_react___default.a.Component), _class.propTypes = {
+  doc: __WEBPACK_IMPORTED_MODULE_6_prop_types___default.a.object.isRequired,
+  history: __WEBPACK_IMPORTED_MODULE_6_prop_types___default.a.object.isRequired
+}, _temp2);
 
 /***/ }),
 
@@ -5980,6 +7731,11 @@ var DocItem = function (_React$Component) {
 
 
 
+var _class,
+    _temp,
+    _jsxFileName = '/Users/chenjigeng/Project/web/tttt/src/views/Home/DocList/DocList.js';
+
+
 // import { connect } from 'react-redux';
 
 
@@ -5988,7 +7744,7 @@ var DocItem = function (_React$Component) {
 if (false) {
   require('./DocList.less');
 }
-var DocList = function (_React$Component) {
+var DocList = (_temp = _class = function (_React$Component) {
   __WEBPACK_IMPORTED_MODULE_4_babel_runtime_helpers_inherits___default()(DocList, _React$Component);
 
   function DocList() {
@@ -6009,18 +7765,34 @@ var DocList = function (_React$Component) {
       return __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
         'div',
         {
-          className: 'doc-list'
+          className: 'doc-list',
+          __source: {
+            fileName: _jsxFileName,
+            lineNumber: 24
+          }
         },
         docs.map(function (doc) {
-          return __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_7__DocItem__["a" /* DocItem */], { key: doc.docId, doc: doc, history: history });
+          return __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_7__DocItem__["a" /* DocItem */], { key: doc.docId, doc: doc, history: history, __source: {
+              fileName: _jsxFileName,
+              lineNumber: 27
+            }
+          });
         }),
-        isLogin && __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_8__CreateDocButton__["a" /* CreateDocButton */], { history: history })
+        isLogin && __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_8__CreateDocButton__["a" /* CreateDocButton */], { history: history, __source: {
+            fileName: _jsxFileName,
+            lineNumber: 28
+          }
+        })
       );
     }
   }]);
 
   return DocList;
-}(__WEBPACK_IMPORTED_MODULE_5_react___default.a.Component);
+}(__WEBPACK_IMPORTED_MODULE_5_react___default.a.Component), _class.propTypes = {
+  docs: __WEBPACK_IMPORTED_MODULE_6_prop_types___default.a.array.isRequired,
+  commonInfo: __WEBPACK_IMPORTED_MODULE_6_prop_types___default.a.object.isRequired,
+  history: __WEBPACK_IMPORTED_MODULE_6_prop_types___default.a.object.isRequired
+}, _temp);
 
 /***/ }),
 
@@ -6061,7 +7833,9 @@ var DocList = function (_React$Component) {
 
 
 
-var _dec, _class;
+var _dec,
+    _class,
+    _jsxFileName = '/Users/chenjigeng/Project/web/tttt/src/views/Home/Home.js';
 
 
 
@@ -6099,9 +7873,21 @@ var Home = (_dec = Object(__WEBPACK_IMPORTED_MODULE_6_react_redux__["connect"])(
 
       return __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(
         'div',
-        { className: 'home-body' },
-        __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_7__Component__["d" /* Navbar */], { history: history }),
-        __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_8__DocList__["a" /* DocList */], { docs: docs, commonInfo: commonInfo, history: history })
+        { className: 'home-body', __source: {
+            fileName: _jsxFileName,
+            lineNumber: 23
+          }
+        },
+        __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_7__Component__["d" /* Navbar */], { history: history, __source: {
+            fileName: _jsxFileName,
+            lineNumber: 24
+          }
+        }),
+        __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_8__DocList__["a" /* DocList */], { docs: docs, commonInfo: commonInfo, history: history, __source: {
+            fileName: _jsxFileName,
+            lineNumber: 25
+          }
+        })
       );
     }
   }]);
@@ -6195,6 +7981,7 @@ function HomeSaga() {
 /***/ 0:
 /***/ (function(module, exports, __webpack_require__) {
 
+__webpack_require__("./node_modules/razzle/node_modules/webpack/hot/poll.js?300");
 module.exports = __webpack_require__("./src/index.js");
 
 
@@ -6288,6 +8075,13 @@ module.exports = require("babel-runtime/regenerator");
 /***/ (function(module, exports) {
 
 module.exports = require("body-parser");
+
+/***/ }),
+
+/***/ "connect-redis":
+/***/ (function(module, exports) {
+
+module.exports = require("connect-redis");
 
 /***/ }),
 

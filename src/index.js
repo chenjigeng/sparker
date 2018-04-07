@@ -5,6 +5,7 @@ const server = http.createServer(app);
 
 let io = initSocket(server);
 
+/* eslint-disable */
 let currentApp = app;
 
 server.listen(process.env.PORT || 3000, error => {

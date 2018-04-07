@@ -6,22 +6,83 @@ export function MarkdownPlugins (options) {
         case ' ': return onSpace(event, change);
         case 'Backspace': return onBackspace(event, change);
         case 'Enter': return onEnter(event, change);
+        case '*': return handleBold(event, change);
         default: return;
       }
     }
   };
 }
 
+function handleBold (event, change) {
+  const { value } = change;
+  if (value.isExpanded) return;
+  const { startBlock, startOffset } = value;
+  const chars = startBlock.text;
+  if (isToggleMark('*', chars, startOffset)) {
+    const {
+      deleteRange,
+      boldChars,
+    } = findDeleteRangeAndTargetChars(change, chars, startOffset);
+    event.preventDefault();   
+    change
+      .deleteForward(deleteRange)
+      .insertText(boldChars)
+      .extend(-boldChars.length)
+      .addMark('bold')
+      .collapseToEnd()
+  }
+  return true;
+}
+
+function isToggleMark(markChar, chars, offset) {
+  if (chars[offset] === markChar || chars[offset - 1] === markChar) {
+    if (chars.match(/\*\*/gi) && chars.match(/\*\*/gi).length >= 1 && chars.match(/\*/gi).length >= 3) {
+      return true;
+    }
+  }
+}
+function findDeleteRangeAndTargetChars(change, chars, startOffset) {
+  const firstIndex = chars.indexOf('**');
+  let boldChars, deleteRange;
+  // 若是在后面插入**
+  if (startOffset > firstIndex + 1) {
+    change.move(-startOffset)    
+      .move(firstIndex);    
+    // 当插入位置为前面
+    if (chars[startOffset] === '*') {
+      deleteRange = startOffset - firstIndex + 1;
+      boldChars = chars.slice(firstIndex + 2, startOffset);
+    } else {
+      // 当插入位置是在后面
+      deleteRange = startOffset - firstIndex;
+      boldChars = chars.slice(firstIndex + 2, startOffset - 1);
+    }
+  } else {
+    // 在后面插入**
+    if (chars[startOffset] === '*') {
+      deleteRange = firstIndex - startOffset + 2;
+      boldChars = chars.slice(startOffset + 1, firstIndex);
+    } else {
+      deleteRange = firstIndex - startOffset + 3;
+      change.move(-1)    
+      boldChars = chars.slice(startOffset, firstIndex);
+    }
+  }
+  return {
+    boldChars,
+    deleteRange,
+  };
+}
+
+// 输入tab,换成两个空格
 function onTab (event, change) {
   const { value } = change;
   if (value.isExpanded) return;
 
-  // if (startBlock.type === 'code') {
   event.preventDefault();
   change.delete();
   change.insertText('  ');
   return true;
-  // }
 }
 
 function onSpace (event, change) {
