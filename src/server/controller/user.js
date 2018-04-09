@@ -32,6 +32,8 @@ userCtrl.login = async function (req, res, next) {
   try {
     const result = await userModel.confirm(username, password);
     const docResult = await userModel.fetchUserInfo(result.user_id);
+    console.log(req);
+    console.log(req.session);
     req.session.login = true;
     req.session.username = username;
     req.session.userId = result.user_id;
