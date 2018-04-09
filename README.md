@@ -8,3 +8,4 @@ You can try it by browsing https://jg.wing-sum.com/ .
 
 1. SSR(引入了服务端渲染)
 2. 引入了service workers来管理缓存资源
+3. 增加了\*\*char\*\*来加粗字体语法
