@@ -4354,7 +4354,8 @@ function initServer(app) {
       client: __WEBPACK_IMPORTED_MODULE_2__redis_index__["a" /* default */]
     })
   }));
-
+  console.log(path.resolve(__dirname + '../../../build/public'));
+  console.log(path.resolve(__dirname + '../../../build'));
   app.use(express.static(path.resolve(__dirname + '../../../build/public')));
   app.use(express.static(path.resolve(__dirname + '../../../build/static')));
   app.use(express.static(path.resolve(__dirname + '../../../build')));
